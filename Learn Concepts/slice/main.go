@@ -33,5 +33,24 @@ func main() {
 	// A slice literal is like an array literal without the length.
 	arrayFifth := []int{5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}
 	fmt.Println(arrayFifth)
+	// ----------------------------------------------------------
+	// Creating a slice with make
+	// slice := make([]Type, length, capacity)
+
+	// Type --> Data type (e.g., int, string).
+	// length --> Number of elements initialized in the slice.
+	// capacity --> Maximum number of elements the slice can hold before resizing.
+
+	newSlice := make([]int, 3, 5)
+	newSlice[0] = 11
+	newSlice[1] = 22
+	newSlice[2] = 33
+	// newSlice[3] = 44
+	// newSlice[4] = 55
+	newSlice = append(newSlice, 44, 55, 66, 77)
+	// Use append() to dynamically grow a slice.
+	// Appending beyond capacity doubles the slice size.
+	fmt.Println(newSlice)
+	// ----------------------------------------------------------
 
 }
