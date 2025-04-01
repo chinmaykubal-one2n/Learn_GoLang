@@ -29,7 +29,11 @@ func main() {
 
 	finalSlice := finalEvaluate(userCondition, numbers)
 
-	fmt.Println(finalSlice)
+	if len(finalSlice) != 0 {
+		fmt.Println(finalSlice)
+	} else {
+		fmt.Println("No number found.")
+	}
 
 }
 
@@ -70,12 +74,7 @@ func finalEvaluate(userCondition []string, inputNumbers []int) []int {
 		}
 	}
 
-	if len(finalSlice) != 0 {
-		return finalSlice
-	}
-
-	fmt.Println("No number found.")
-	return nil
+	return finalSlice
 }
 
 func getEvenOdd(flagValue string, numbers []int) []int {
