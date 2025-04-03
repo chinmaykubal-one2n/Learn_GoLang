@@ -12,7 +12,7 @@
 // Conditions specified using a set of functions:
 // Sample Output: 6, 12
 
-// story 8 is also the same as below.
+// TEST CASES ARE NEEDED .
 
 package main
 
@@ -41,6 +41,7 @@ func main() {
 func finalEvaluate(userCondition []string, inputNumbers []int) []int {
 	var finalSlice []int = inputNumbers
 
+	// convert this to only one  for loop.
 	for _, condition := range userCondition {
 		if strings.Contains(condition, "even") {
 			finalSlice = getEvenOdd("even", finalSlice)
@@ -90,14 +91,15 @@ func getEvenOdd(flagValue string, numbers []int) []int {
 		}
 	}
 
-	if flagValue == "even" {
+	// below if statements can be optimzed furthur
+	if flagValue == "even" { // magic values should not be there define them first
 		return evenNumbers
 	}
-	if flagValue == "odd" {
+	if flagValue == "odd" { // magic values should not be there  define them first
 		return oddNumbers
 	}
 
-	return nil
+	return nil // write a common funciton and call it in the respective functions in the first step rather than in the end
 }
 
 func getGreaterOrLessThan(flagValue string, greaterLessThanN int, numbers []int) []int {
@@ -124,7 +126,7 @@ func getGreaterOrLessThan(flagValue string, greaterLessThanN int, numbers []int)
 		return listOfnumbers
 	}
 
-	return nil
+	return nil // write a common funciton and call it in the respective functions in the first step rather than in the end
 }
 
 func getMultipleOfN(multipleOfN int, numbers []int) []int {
@@ -140,7 +142,7 @@ func getMultipleOfN(multipleOfN int, numbers []int) []int {
 		return multiplesOfN
 	}
 
-	return nil
+	return nil // write a common funciton and call it in the respective functions in the first step rather than in the end
 }
 
 func getPrimes(numbers []int) []int {
@@ -156,7 +158,7 @@ func getPrimes(numbers []int) []int {
 		return primeNumbers
 	}
 
-	return nil
+	return nil // write a common funciton and call it in the respective functions in the first step rather than in the end
 }
 
 func checkPrimes(number int) bool {
