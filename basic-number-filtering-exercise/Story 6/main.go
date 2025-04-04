@@ -49,8 +49,8 @@ func main() {
 	multiplesOfThree := getMultiplesOfThree(oddNumbers)
 	numbersGreaterThanTen := getGreaterThanTen(multiplesOfThree)
 
-	fmt.Printf("List of odd numbers is: %d\n", oddNumbers)
-	fmt.Printf("List of odd numbers and multiples of 3 is: %d\n", multiplesOfThree)
+	// fmt.Printf("List of odd numbers is: %d\n", oddNumbers)
+	// fmt.Printf("List of odd numbers and multiples of 3 is: %d\n", multiplesOfThree)
 	fmt.Printf("List of odd numbers and multiples of 3 and greater than 10 is: %d\n", numbersGreaterThanTen)
 
 }
