@@ -25,10 +25,18 @@ import (
 
 func main() {
 	var numbers = []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}
+	var userCondition = []string{"greater than 5", "multiple of 3", "even"}
+	var finalSlice []int
 
-	var userCondition = []string{"greater than 5", "multiple of 3", "odd"}
-
-	finalSlice := finalEvaluate(userCondition, numbers)
+	if len(userCondition) == 0 {
+		fmt.Println("No condition provided.")
+		return
+	} else if len(numbers) == 0 {
+		fmt.Println("No number provided.")
+		return
+	} else {
+		finalSlice = finalEvaluate(userCondition, numbers)
+	}
 
 	if len(finalSlice) != 0 {
 		fmt.Println(finalSlice)
@@ -39,39 +47,35 @@ func main() {
 }
 
 func finalEvaluate(userCondition []string, inputNumbers []int) []int {
-	var finalSlice []int = inputNumbers
+	const (
+		EvenFlag     = "even"
+		OddFlag      = "odd"
+		GreaterFlag  = "greater"
+		LessFlag     = "less"
+		MultipleFlag = "multiple"
+		PrimeFlag    = "prime"
+	)
+	finalSlice := inputNumbers
 
-	// convert this to only one  for loop.
 	for _, condition := range userCondition {
-		if strings.Contains(condition, "even") {
-			finalSlice = getEvenOdd("even", finalSlice)
-		} else if strings.Contains(condition, "odd") {
-			finalSlice = getEvenOdd("odd", finalSlice)
-		}
-	}
-
-	for _, condition := range userCondition {
-		if strings.Contains(condition, "greater than") {
+		switch {
+		case strings.Contains(condition, EvenFlag):
+			finalSlice = getEvenOdd(EvenFlag, finalSlice)
+		case strings.Contains(condition, OddFlag):
+			finalSlice = getEvenOdd(OddFlag, finalSlice)
+		case strings.Contains(condition, GreaterFlag):
 			parts := strings.Split(condition, " ")
 			num, _ := strconv.Atoi(parts[2])
 			finalSlice = getGreaterOrLessThan(parts[0], num, finalSlice)
-		} else if strings.Contains(condition, "less than") {
+		case strings.Contains(condition, LessFlag):
 			parts := strings.Split(condition, " ")
 			num, _ := strconv.Atoi(parts[2])
 			finalSlice = getGreaterOrLessThan(parts[0], num, finalSlice)
-		}
-	}
-
-	for _, condition := range userCondition {
-		if strings.Contains(condition, "multiple of") {
+		case strings.Contains(condition, MultipleFlag):
 			parts := strings.Split(condition, " ")
 			num, _ := strconv.Atoi(parts[2])
 			finalSlice = getMultipleOfN(num, finalSlice)
-		}
-	}
-
-	for _, condition := range userCondition {
-		if strings.Contains(condition, "prime") {
+		case strings.Contains(condition, PrimeFlag):
 			finalSlice = getPrimes(finalSlice)
 		}
 	}
@@ -80,8 +84,17 @@ func finalEvaluate(userCondition []string, inputNumbers []int) []int {
 }
 
 func getEvenOdd(flagValue string, numbers []int) []int {
+	// by default it is an empty array so if user asks for even
+	// numbers and if there are no even numbers
+	// then it will return an empty array.
 	var evenNumbers []int
 	var oddNumbers []int
+
+	// this is a magic value. define it first
+	const (
+		EvenFlag = "even"
+		OddFlag  = "odd"
+	)
 
 	for _, number := range numbers {
 		if number%2 == 0 {
@@ -92,21 +105,25 @@ func getEvenOdd(flagValue string, numbers []int) []int {
 	}
 
 	// below if statements can be optimzed furthur
-	if flagValue == "even" { // magic values should not be there define them first
+	if flagValue == EvenFlag { // magic values should not be there define them first
 		return evenNumbers
 	}
-	if flagValue == "odd" { // magic values should not be there  define them first
+
+	if flagValue == OddFlag { // magic values should not be there  define them first
 		return oddNumbers
 	}
 
-	return nil // write a common funciton and call it in the respective functions in the first step rather than in the end
+	return []int{} // as we have 2 arrays so better return []int{} + this function needs to written somthing so the line is here
 }
 
 func getGreaterOrLessThan(flagValue string, greaterLessThanN int, numbers []int) []int {
-
 	var listOfnumbers []int
+	const (
+		GreaterFlag = "greater"
+		LessFlag    = "less"
+	)
 
-	if flagValue == "greater" {
+	if flagValue == GreaterFlag {
 		for _, number := range numbers {
 			if number > greaterLessThanN {
 				listOfnumbers = append(listOfnumbers, number)
@@ -114,7 +131,7 @@ func getGreaterOrLessThan(flagValue string, greaterLessThanN int, numbers []int)
 		}
 	}
 
-	if flagValue == "less" {
+	if flagValue == LessFlag {
 		for _, number := range numbers {
 			if number < greaterLessThanN {
 				listOfnumbers = append(listOfnumbers, number)
@@ -122,11 +139,7 @@ func getGreaterOrLessThan(flagValue string, greaterLessThanN int, numbers []int)
 		}
 	}
 
-	if len(listOfnumbers) != 0 {
-		return listOfnumbers
-	}
-
-	return nil // write a common funciton and call it in the respective functions in the first step rather than in the end
+	return listOfnumbers
 }
 
 func getMultipleOfN(multipleOfN int, numbers []int) []int {
@@ -138,11 +151,7 @@ func getMultipleOfN(multipleOfN int, numbers []int) []int {
 		}
 	}
 
-	if len(multiplesOfN) != 0 {
-		return multiplesOfN
-	}
-
-	return nil // write a common funciton and call it in the respective functions in the first step rather than in the end
+	return multiplesOfN
 }
 
 func getPrimes(numbers []int) []int {
@@ -154,11 +163,7 @@ func getPrimes(numbers []int) []int {
 		}
 	}
 
-	if len(primeNumbers) != 0 {
-		return primeNumbers
-	}
-
-	return nil // write a common funciton and call it in the respective functions in the first step rather than in the end
+	return primeNumbers // write a common funciton and call it in the respective functions in the first step rather than in the end
 }
 
 func checkPrimes(number int) bool {

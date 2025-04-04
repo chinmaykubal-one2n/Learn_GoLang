@@ -23,9 +23,18 @@ import (
 
 func main() {
 	var numbers = []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}
-
 	var userCondition = []string{"less than 6", "odd", "multiple of 3"}
-	finalSlice := finalEvaluate(userCondition, numbers)
+	var finalSlice []int
+
+	if len(userCondition) == 0 {
+		fmt.Println("No condition provided.")
+		return
+	} else if len(numbers) == 0 {
+		fmt.Println("No number provided.")
+		return
+	} else {
+		finalSlice = finalEvaluate(userCondition, numbers)
+	}
 
 	if len(finalSlice) != 0 {
 		fmt.Println(finalSlice)
@@ -41,43 +50,40 @@ func finalEvaluate(userCondition []string, inputNumbers []int) []int {
 	var primes []int = inputNumbers
 	var tempoSlice []int
 	var finalSlice []int
+	const (
+		EvenFlag     = "even"
+		OddFlag      = "odd"
+		GreaterFlag  = "greater"
+		LessFlag     = "less"
+		MultipleFlag = "multiple"
+		PrimeFlag    = "prime"
+	)
 	var hashMap = make(map[int]bool) // name is so for now to understanding the stuff
 
 	for _, condition := range userCondition {
-		if strings.Contains(condition, "even") {
-			evenOdds = getEvenOdd("even", inputNumbers)
+		switch {
+		case strings.Contains(condition, EvenFlag):
+			evenOdds = getEvenOdd(EvenFlag, inputNumbers)
 			tempoSlice = append(tempoSlice, evenOdds...)
-		} else if strings.Contains(condition, "odd") {
-			evenOdds = getEvenOdd("odd", inputNumbers)
+		case strings.Contains(condition, OddFlag):
+			evenOdds = getEvenOdd(OddFlag, inputNumbers)
 			tempoSlice = append(tempoSlice, evenOdds...)
-		}
-	}
-
-	for _, condition := range userCondition {
-		if strings.Contains(condition, "greater than") {
+		case strings.Contains(condition, GreaterFlag):
 			parts := strings.Split(condition, " ")
 			num, _ := strconv.Atoi(parts[2])
 			greaterLessNos = getGreaterOrLessThan(parts[0], num, inputNumbers)
 			tempoSlice = append(tempoSlice, greaterLessNos...)
-		} else if strings.Contains(condition, "less than") {
+		case strings.Contains(condition, LessFlag):
 			parts := strings.Split(condition, " ")
 			num, _ := strconv.Atoi(parts[2])
 			greaterLessNos = getGreaterOrLessThan(parts[0], num, inputNumbers)
 			tempoSlice = append(tempoSlice, greaterLessNos...)
-		}
-	}
-
-	for _, condition := range userCondition {
-		if strings.Contains(condition, "multiple of") {
+		case strings.Contains(condition, MultipleFlag):
 			parts := strings.Split(condition, " ")
 			num, _ := strconv.Atoi(parts[2])
 			multiplesOf = getMultipleOfN(num, inputNumbers)
 			tempoSlice = append(tempoSlice, multiplesOf...)
-		}
-	}
-
-	for _, condition := range userCondition {
-		if strings.Contains(condition, "prime") {
+		case strings.Contains(condition, PrimeFlag):
 			primes = getPrimes(inputNumbers)
 			tempoSlice = append(tempoSlice, primes...)
 		}
@@ -98,6 +104,10 @@ func finalEvaluate(userCondition []string, inputNumbers []int) []int {
 func getEvenOdd(flagValue string, numbers []int) []int {
 	var evenNumbers []int
 	var oddNumbers []int
+	const (
+		EvenFlag = "even"
+		OddFlag  = "odd"
+	)
 
 	for _, number := range numbers {
 		if number%2 == 0 {
@@ -107,21 +117,25 @@ func getEvenOdd(flagValue string, numbers []int) []int {
 		}
 	}
 
-	if flagValue == "even" {
+	if flagValue == EvenFlag {
 		return evenNumbers
 	}
-	if flagValue == "odd" {
+	if flagValue == OddFlag {
 		return oddNumbers
 	}
 
-	return nil
+	return []int{}
 }
 
 func getGreaterOrLessThan(flagValue string, greaterLessThanN int, numbers []int) []int {
 
 	var listOfnumbers []int
+	const (
+		GreaterFlag = "greater"
+		LessFlag    = "less"
+	)
 
-	if flagValue == "greater" {
+	if flagValue == GreaterFlag {
 		for _, number := range numbers {
 			if number > greaterLessThanN {
 				listOfnumbers = append(listOfnumbers, number)
@@ -129,7 +143,7 @@ func getGreaterOrLessThan(flagValue string, greaterLessThanN int, numbers []int)
 		}
 	}
 
-	if flagValue == "less" {
+	if flagValue == LessFlag {
 		for _, number := range numbers {
 			if number < greaterLessThanN {
 				listOfnumbers = append(listOfnumbers, number)
@@ -137,11 +151,7 @@ func getGreaterOrLessThan(flagValue string, greaterLessThanN int, numbers []int)
 		}
 	}
 
-	if len(listOfnumbers) != 0 {
-		return listOfnumbers
-	}
-
-	return nil
+	return listOfnumbers
 }
 
 func getMultipleOfN(multipleOfN int, numbers []int) []int {
@@ -153,11 +163,7 @@ func getMultipleOfN(multipleOfN int, numbers []int) []int {
 		}
 	}
 
-	if len(multiplesOfN) != 0 {
-		return multiplesOfN
-	}
-
-	return nil
+	return multiplesOfN
 }
 
 func getPrimes(numbers []int) []int {
@@ -169,11 +175,7 @@ func getPrimes(numbers []int) []int {
 		}
 	}
 
-	if len(primeNumbers) != 0 {
-		return primeNumbers
-	}
-
-	return nil
+	return primeNumbers
 }
 
 func checkPrimes(number int) bool {
