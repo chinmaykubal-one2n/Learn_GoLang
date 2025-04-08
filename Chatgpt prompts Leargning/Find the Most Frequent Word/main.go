@@ -27,6 +27,10 @@ func mostFrequentWord(sentence string) string {
 	var hashMap = make(map[string]int)
 	var maxCount int = 0
 
+	if sentence == "" {
+		return mostFrequentWord
+	}
+
 	for _, character := range sentence {
 		if unicode.IsLetter(character) || unicode.IsSpace(character) {
 			character = unicode.ToLower(character)
@@ -50,5 +54,5 @@ func mostFrequentWord(sentence string) string {
 }
 
 func main() {
-	fmt.Println(mostFrequentWord("the boss is gg gg gg"))
+	fmt.Println(mostFrequentWord("the boss is gg gg gg`.`, `,`, `!`"))
 }
