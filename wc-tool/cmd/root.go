@@ -25,69 +25,91 @@ var (
 var rootCmd = &cobra.Command{
 	Use:   "wc [flags] <filename>",
 	Short: "A mini version of the wc command",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Long:  `Trying to mimic the command line program that implements Unix wc like functionality`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		filePath := args[0]
+		exitCode := 0
+		totalLineCount := 0
+		totalWordCount := 0
+		totalCharCount := 0
 
-		file, err := os.Open(filePath)
-		if err != nil && errors.Is(err, os.ErrNotExist) {
-			fmt.Fprintf(os.Stderr, "%s: %s: open: No such file or directory\n", os.Args[0], filePath)
-			os.Exit(1)
-		}
+		for _, filePath := range args {
+			file, err := os.Open(filePath)
 
-		if err != nil && errors.Is(err, os.ErrPermission) {
-			fmt.Fprintf(os.Stderr, "%s: %s: open: Permission denied\n", os.Args[0], filePath)
-			os.Exit(1)
-		}
-
-		info, _ := file.Stat()
-		if info.IsDir() {
-			fmt.Fprintf(os.Stderr, "%s: %s: read: Is a directory\n", os.Args[0], filePath)
-			os.Exit(1)
-		}
-		defer file.Close()
-
-		if !lineFlag && !wordFlag && !charFlag {
-			lineFlag = true
-			wordFlag = true
-			charFlag = true
-		}
-
-		if lineFlag {
-			lineCount, err := lineCounter(file)
-			if err != nil {
-				log.Fatal(err)
+			if err != nil && errors.Is(err, os.ErrNotExist) {
+				fmt.Fprintf(os.Stderr, "%s: %s: open: No such file or directory\n", os.Args[0], filePath)
+				exitCode++
+				continue
 			}
-			fmt.Printf("%8d", lineCount)
-			file.Seek(0, io.SeekStart)
+
+			if err != nil && errors.Is(err, os.ErrPermission) {
+				fmt.Fprintf(os.Stderr, "%s: %s: open: Permission denied\n", os.Args[0], filePath)
+				exitCode++
+				continue
+			}
+
+			info, _ := file.Stat()
+			if info.IsDir() {
+				fmt.Fprintf(os.Stderr, "%s: %s: read: Is a directory\n", os.Args[0], filePath)
+				exitCode++
+				continue
+			}
+
+			defer file.Close()
+
+			if !lineFlag && !wordFlag && !charFlag {
+				lineFlag = true
+				wordFlag = true
+				charFlag = true
+			}
+
+			if lineFlag {
+				lineCount, err := lineCounter(file)
+				if err != nil {
+					log.Fatal(err)
+				}
+				fmt.Printf("%8d", lineCount)
+				totalLineCount = totalLineCount + lineCount
+				file.Seek(0, io.SeekStart)
+			}
+
+			if wordFlag {
+				wordCount, err := wordCounter(file)
+				if err != nil {
+					log.Fatal(err)
+				}
+				fmt.Printf("%8d", wordCount)
+				totalWordCount = totalWordCount + wordCount
+				file.Seek(0, io.SeekStart)
+			}
+
+			if charFlag {
+				charCount, err := charCounter(file)
+				if err != nil {
+					log.Fatal(err)
+				}
+				fmt.Printf("%8d", charCount)
+				totalCharCount = totalCharCount + charCount
+			}
+			fmt.Printf(" %s\n", filePath)
+
 		}
 
-		if wordFlag {
-			wordCount, err := wordCounter(file)
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Printf("%8d", wordCount)
-			file.Seek(0, io.SeekStart)
+		if lineFlag && totalLineCount > 0 {
+			fmt.Printf("%8d", totalLineCount)
 		}
+		if wordFlag && totalWordCount > 0 {
+			fmt.Printf("%8d", totalWordCount)
+		}
+		if charFlag && totalCharCount > 0 {
+			fmt.Printf("%8d", totalCharCount)
+		}
+		fmt.Printf(" total\n")
 
-		if charFlag {
-			charCount, err := charCounter(file)
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Printf("%8d", charCount)
-		}
-		fmt.Printf(" %s\n", filePath)
+		os.Exit(exitCode)
 	},
 }
 
@@ -113,7 +135,6 @@ func init() {
 	rootCmd.Flags().BoolVarP(&lineFlag, "lines", "l", false, "Count lines in the file (like wc -l)")
 	rootCmd.Flags().BoolVarP(&wordFlag, "words", "w", false, "Count words in the file (like wc -w)")
 	rootCmd.Flags().BoolVarP(&charFlag, "characters", "c", false, "Count characters in the file (like wc -c)")
-
 }
 
 // old approach
