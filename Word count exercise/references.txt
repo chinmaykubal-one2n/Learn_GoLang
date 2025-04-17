@@ -1,0 +1,6 @@
+# Problem statement :- https://one2n.io/go-bootcamp/go-projects/word-count-in-go/word-count-exercise#story-8-(performance-and-optimisations)
+
+1.https://pkg.go.dev/os
+
+2.https://pkg.go.dev/github.com/christiangda/go-line-counter#section-readme, has given reference to the given stackoverflow doc
+    https://stackoverflow.com/questions/24562942/golang-how-do-i-determine-the-number-of-lines-in-a-file-efficiently

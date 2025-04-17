@@ -1,23 +1,48 @@
 package main
 
 import (
+	"bytes"
+	"fmt"
+	"io"
 	"log"
 	"os"
 )
 
 func main() {
-	file := "./example_file.txt"
-	readFile(file)
-}
+	filePath := "example_file.txt"
 
-func readFile(file string) {
-	data, error := os.ReadFile(file)
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
 
-	if error != nil {
-		log.Fatal(error)
+	lineCount, err := lineCounter(file)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	os.Stdout.Write(data)
+	fmt.Printf("Total lines: %d\n", lineCount)
 }
 
-// after writing raise a pr for the same.
+func lineCounter(file io.Reader) (int, error) {
+	buffer := make([]byte, 32*1024)
+	lineCount := 0
+	lineSeperator := []byte{'\n'}
+
+	for {
+		noOfBytes, err := file.Read(buffer)
+		lineCount += bytes.Count(buffer[:noOfBytes], lineSeperator)
+
+		switch {
+		case err == io.EOF:
+			return lineCount, nil
+
+		case err != nil:
+			return lineCount, err
+		}
+	}
+
+}
+
+// after writing raise a pr for the same, lets write some more code then raise the pr.
