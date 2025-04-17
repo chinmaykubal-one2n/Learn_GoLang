@@ -56,12 +56,19 @@ to quickly create a Cobra application.`,
 		}
 		defer file.Close()
 
+		if !lineFlag && !wordFlag && !charFlag {
+			lineFlag = true
+			wordFlag = true
+			charFlag = true
+		}
+
 		if lineFlag {
 			lineCount, err := lineCounter(file)
 			if err != nil {
 				log.Fatal(err)
 			}
-			fmt.Printf("%8d %s\n", lineCount, filePath)
+			fmt.Printf("%8d", lineCount)
+			file.Seek(0, io.SeekStart)
 		}
 
 		if wordFlag {
@@ -69,7 +76,8 @@ to quickly create a Cobra application.`,
 			if err != nil {
 				log.Fatal(err)
 			}
-			fmt.Printf("%8d %s\n", wordCount, filePath)
+			fmt.Printf("%8d", wordCount)
+			file.Seek(0, io.SeekStart)
 		}
 
 		if charFlag {
@@ -77,8 +85,9 @@ to quickly create a Cobra application.`,
 			if err != nil {
 				log.Fatal(err)
 			}
-			fmt.Printf("%8d %s\n", charCount, filePath)
+			fmt.Printf("%8d", charCount)
 		}
+		fmt.Printf(" %s\n", filePath)
 	},
 }
 
