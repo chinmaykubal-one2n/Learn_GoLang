@@ -4,6 +4,7 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
@@ -16,6 +17,8 @@ import (
 
 var (
 	lineFlag bool
+	wordFlag bool
+	charFlag bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -58,9 +61,24 @@ to quickly create a Cobra application.`,
 			if err != nil {
 				log.Fatal(err)
 			}
-			fmt.Printf("%8d %s\n", lineCount, filePath) //writes to os.Stdout by default
+			fmt.Printf("%8d %s\n", lineCount, filePath)
 		}
 
+		if wordFlag {
+			wordCount, err := wordCounter(file)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Printf("%8d %s\n", wordCount, filePath)
+		}
+
+		if charFlag {
+			charCount, err := charCounter(file)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Printf("%8d %s\n", charCount, filePath)
+		}
 	},
 }
 
@@ -84,8 +102,12 @@ func init() {
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	rootCmd.Flags().BoolVarP(&lineFlag, "lines", "l", false, "Count lines in the file (like wc -l)")
+	rootCmd.Flags().BoolVarP(&wordFlag, "words", "w", false, "Count words in the file (like wc -w)")
+	rootCmd.Flags().BoolVarP(&charFlag, "characters", "c", false, "Count characters in the file (like wc -c)")
+
 }
 
+// old approach
 func lineCounter(file io.Reader) (int, error) {
 	buffer := make([]byte, 32*1024)
 	lineCount := 0
@@ -102,4 +124,40 @@ func lineCounter(file io.Reader) (int, error) {
 			return lineCount, err
 		}
 	}
+}
+
+func wordCounter(file io.Reader) (int, error) {
+	wordCount := 0
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanWords) //bufio.ScanLines (splits on a new line, we can make use this to calc. no. of lines)
+
+	for scanner.Scan() {
+		wordCount++
+	}
+
+	err := scanner.Err()
+	if err != nil {
+		return 0, err
+	}
+
+	return wordCount, nil
+}
+
+func charCounter(file io.Reader) (int, error) {
+	charCount := 0
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanRunes)
+
+	for scanner.Scan() {
+		charCount++
+	}
+
+	err := scanner.Err()
+	if err != nil {
+		return 0, err
+	}
+
+	return charCount, nil
 }

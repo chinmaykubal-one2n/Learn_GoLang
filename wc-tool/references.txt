@@ -11,3 +11,4 @@
     go install github.com/spf13/cobra-cli@latest
     go mod init wc-tool
   
+4. https://pkg.go.dev/bufio#Reader.WriteTo (word count)
