@@ -11,6 +11,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -95,20 +96,14 @@ var rootCmd = &cobra.Command{
 				totalCharCount = totalCharCount + charCount
 			}
 			fmt.Printf(" %s\n", filePath)
-
 		}
 
-		if lineFlag && totalLineCount > 0 {
+		if len(args) > 1 {
 			fmt.Printf("%8d", totalLineCount)
-		}
-		if wordFlag && totalWordCount > 0 {
 			fmt.Printf("%8d", totalWordCount)
-		}
-		if charFlag && totalCharCount > 0 {
 			fmt.Printf("%8d", totalCharCount)
+			fmt.Printf(" total\n")
 		}
-		fmt.Printf(" total\n")
-
 		os.Exit(exitCode)
 	},
 }
@@ -190,4 +185,31 @@ func charCounter(file io.Reader) (int, error) {
 	}
 
 	return charCount, nil
+}
+
+func ReadFromStdin() {
+	var userInput []string
+
+	scanner := bufio.NewScanner(os.Stdin)
+
+	for scanner.Scan() {
+		userInput = append(userInput, scanner.Text())
+	}
+
+	err := scanner.Err()
+	if err != nil {
+		if err.Error() == "EOF" {
+			fmt.Println("Input finished.")
+		} else {
+			fmt.Println("Error reading input:", err)
+		}
+	}
+
+	completeString := strings.Join(userInput, "\n")
+
+	lineCount := len(userInput)
+	wordCount := len(strings.Fields(completeString))
+	charCount := len(completeString) + 1 // +1 to capture that last \n
+
+	fmt.Printf("\n%8d%8d%8d\n", lineCount, wordCount, charCount)
 }
