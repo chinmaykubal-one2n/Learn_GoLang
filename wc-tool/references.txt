@@ -12,3 +12,4 @@
     go mod init wc-tool
   
 4. https://pkg.go.dev/bufio#Reader.WriteTo (word count)
+5. story 6 and 7 google searched code snippet
