@@ -22,6 +22,7 @@ func main() {
 
 	if flag.NArg() != 1 {
 		fmt.Fprintf(os.Stderr, "Usage: %s [-l | -w | -c] <filename>\n", os.Args[0])
+		flag.PrintDefaults()
 		os.Exit(1)
 	}
 
