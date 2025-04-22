@@ -13,21 +13,22 @@ import (
 func main() {
 	var lineFlag bool
 	var wordFlag bool
+	var charFlag bool
 	flag.BoolVar(&lineFlag, "l", false, "Count lines")
 	flag.BoolVar(&wordFlag, "w", false, "Count words")
+	flag.BoolVar(&charFlag, "c", false, "Count characters")
 	flag.Parse()
 
-	if (!lineFlag && !wordFlag) || flag.NArg() != 1 {
-		fmt.Fprintf(os.Stderr, "Usage: %s [-l | -w] <filename>\n", os.Args[0])
+	if (!lineFlag && !wordFlag && !charFlag) || flag.NArg() != 1 {
+		fmt.Fprintf(os.Stderr, "Usage: %s [-l | -w | -c] <filename>\n", os.Args[0])
 		os.Exit(1)
 	}
-
 	filePath := flag.Arg(0)
 
 	file := validateFile(filePath)
 	defer file.Close()
 
-	evaluateFile(filePath, file, lineFlag, wordFlag)
+	evaluateFile(filePath, file, lineFlag, wordFlag, charFlag)
 }
 
 // need to think about how to write test cases for this function
@@ -54,7 +55,7 @@ func validateFile(filePath string) *os.File {
 }
 
 // need to think about how to write test cases for this function as there is not return value
-func evaluateFile(filePath string, file *os.File, lineFlag, wordFlag bool) {
+func evaluateFile(filePath string, file *os.File, lineFlag, wordFlag, charFlag bool) {
 	if lineFlag {
 		lineCount, lineCountErr := lineCounter(file)
 		if lineCountErr != nil {
@@ -70,6 +71,15 @@ func evaluateFile(filePath string, file *os.File, lineFlag, wordFlag bool) {
 			log.Fatal(wordCountErr)
 		}
 		fmt.Printf("%8d", wordCount)
+		file.Seek(0, io.SeekStart)
+	}
+
+	if charFlag {
+		charCount, charCountErr := charCounter(file)
+		if charCountErr != nil {
+			log.Fatal(charCountErr)
+		}
+		fmt.Printf("%8d", charCount)
 		file.Seek(0, io.SeekStart)
 	}
 
@@ -112,4 +122,23 @@ func wordCounter(file io.Reader) (int, error) {
 	}
 
 	return wordCount, nil
+}
+
+// test cases written
+func charCounter(file io.Reader) (int, error) {
+	charCount := 0
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanRunes)
+
+	for scanner.Scan() {
+		charCount++
+	}
+
+	err := scanner.Err()
+	if err != nil {
+		return 0, err
+	}
+
+	return charCount, nil
 }
