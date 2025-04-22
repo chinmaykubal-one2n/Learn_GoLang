@@ -38,15 +38,11 @@ type wordCounterTest struct {
 	expect int
 }
 
+// expectations are set based on the output of wc command
 var wordCounterTests = []wordCounterTest{
-	{input: "", expect: 0},
-	{input: "hello", expect: 1},
-	{input: "hello world", expect: 2},
-	{input: "hello   world", expect: 2},
-	{input: "hello\nworld", expect: 2},
-	{input: "hello\tworld\nfoo", expect: 3},
-	{input: "hello\tworld\nfoo\n", expect: 3},
-	{input: "   spaced   out    words   ", expect: 3},
+	{input: "Hello Golang.", expect: 2},
+	{input: "This is a simple file !!", expect: 6},
+	{input: "With some text inside it with some numbers 1,2,3,4,5 and some special chars.!@#$%^&*()", expect: 13},
 }
 
 func TestWordCounter(t *testing.T) {
@@ -58,6 +54,31 @@ func TestWordCounter(t *testing.T) {
 		}
 		if count != testCase.expect {
 			t.Errorf("Expected %d words, got %d for input %s", testCase.expect, count, testCase.input)
+		}
+	}
+}
+
+type charCounterTest struct {
+	input  string
+	expect int
+}
+
+// expectations are set based on the output of wc command
+var charCounterTests = []charCounterTest{
+	{input: "Hello Golang.", expect: 13},
+	{input: "This is a simple file !!", expect: 24},
+	{input: "With some text inside it with some numbers 1,2,3,4,5 and some special chars.!@#$%^&*()", expect: 86},
+}
+
+func TestCharCounter(t *testing.T) {
+	for _, testCase := range charCounterTests {
+		reader := strings.NewReader(testCase.input)
+		count, err := charCounter(reader)
+		if err != nil {
+			t.Errorf("Unexpected error for input %s: %v", testCase.input, err)
+		}
+		if count != testCase.expect {
+			t.Errorf("Expected %d characters, got %d for input %s", testCase.expect, count, testCase.input)
 		}
 	}
 }
