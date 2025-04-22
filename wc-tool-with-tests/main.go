@@ -1,0 +1,122 @@
+package main
+
+import (
+	"bufio"
+	"errors"
+	"flag"
+	"fmt"
+	"io"
+	"log"
+	"os"
+)
+
+func main() {
+	getFile()
+}
+
+// need to refactor the code
+// getFile() validateFile() evaluateFile() are written just to decrease the size of the main function
+// need to think about how to write test cases for this function as there is not return value
+func getFile() {
+	var lineFlag bool
+	var wordFlag bool
+	flag.BoolVar(&lineFlag, "l", false, "Count lines")
+	flag.BoolVar(&wordFlag, "w", false, "Count words")
+
+	flag.Parse()
+
+	if (!lineFlag && !wordFlag) || flag.NArg() != 1 {
+		fmt.Fprintf(os.Stderr, "Usage: %s [-l | -w] <filename>\n", os.Args[0])
+		os.Exit(1)
+	}
+
+	filePath := flag.Arg(0)
+	file := validateFile(filePath)
+	defer file.Close()
+
+	evaluateFile(filePath, file, lineFlag, wordFlag)
+}
+
+// need to think about how to write test cases for this function
+func validateFile(filePath string) *os.File {
+	file, err := os.Open(filePath)
+
+	if errors.Is(err, os.ErrNotExist) {
+		fmt.Fprintf(os.Stderr, "%s: %s: open: No such file or directory\n", os.Args[0], filePath)
+		os.Exit(1)
+	}
+
+	if errors.Is(err, os.ErrPermission) {
+		fmt.Fprintf(os.Stderr, "%s: %s: open: Permission denied\n", os.Args[0], filePath)
+		os.Exit(1)
+	}
+
+	info, _ := file.Stat()
+	if info.IsDir() {
+		fmt.Fprintf(os.Stderr, "%s: %s: read: Is a directory\n", os.Args[0], filePath)
+		os.Exit(1)
+	}
+
+	return file
+}
+
+// need to think about how to write test cases for this function as there is not return value
+func evaluateFile(filePath string, file *os.File, lineFlag, wordFlag bool) {
+	if lineFlag {
+		lineCount, lineCountErr := lineCounter(file)
+		if lineCountErr != nil {
+			log.Fatal(lineCountErr)
+		}
+		fmt.Printf("%8d", lineCount)
+		file.Seek(0, io.SeekStart)
+	}
+
+	if wordFlag {
+		wordCount, wordCountErr := wordCounter(file)
+		if wordCountErr != nil {
+			log.Fatal(wordCountErr)
+		}
+		fmt.Printf("%8d", wordCount)
+		file.Seek(0, io.SeekStart)
+	}
+
+	fmt.Printf(" %s\n", filePath)
+}
+
+// test cases written
+func lineCounter(file io.Reader) (int, error) {
+	lineCount := 0
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+
+	for scanner.Scan() {
+		lineCount++
+	}
+
+	err := scanner.Err()
+	if err != nil {
+		return 0, err
+	}
+
+	return lineCount, nil
+}
+
+// test cases written
+func wordCounter(file io.Reader) (int, error) {
+	wordCount := 0
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanWords)
+
+	for scanner.Scan() {
+		wordCount++
+	}
+
+	err := scanner.Err()
+	if err != nil {
+		return 0, err
+	}
+
+	return wordCount, nil
+}
