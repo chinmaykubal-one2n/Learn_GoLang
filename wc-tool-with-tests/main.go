@@ -11,18 +11,10 @@ import (
 )
 
 func main() {
-	getFile()
-}
-
-// need to refactor the code
-// getFile() validateFile() evaluateFile() are written just to decrease the size of the main function
-// need to think about how to write test cases for this function as there is not return value
-func getFile() {
 	var lineFlag bool
 	var wordFlag bool
 	flag.BoolVar(&lineFlag, "l", false, "Count lines")
 	flag.BoolVar(&wordFlag, "w", false, "Count words")
-
 	flag.Parse()
 
 	if (!lineFlag && !wordFlag) || flag.NArg() != 1 {
@@ -31,6 +23,7 @@ func getFile() {
 	}
 
 	filePath := flag.Arg(0)
+
 	file := validateFile(filePath)
 	defer file.Close()
 
