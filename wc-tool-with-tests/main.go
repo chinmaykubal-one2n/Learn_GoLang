@@ -14,17 +14,22 @@ func main() {
 	var lineFlag bool
 	var wordFlag bool
 	var charFlag bool
+
 	flag.BoolVar(&lineFlag, "l", false, "Count lines")
 	flag.BoolVar(&wordFlag, "w", false, "Count words")
 	flag.BoolVar(&charFlag, "c", false, "Count characters")
 	flag.Parse()
 
-	if (!lineFlag && !wordFlag && !charFlag) || flag.NArg() != 1 {
+	if flag.NArg() != 1 {
 		fmt.Fprintf(os.Stderr, "Usage: %s [-l | -w | -c] <filename>\n", os.Args[0])
 		os.Exit(1)
 	}
-	filePath := flag.Arg(0)
 
+	if !lineFlag && !wordFlag && !charFlag {
+		lineFlag, wordFlag, charFlag = true, true, true
+	}
+
+	filePath := flag.Arg(0)
 	file := validateFile(filePath)
 	defer file.Close()
 
