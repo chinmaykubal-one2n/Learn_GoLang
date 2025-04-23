@@ -14,13 +14,14 @@ func main() {
 	var lineFlag bool
 	var wordFlag bool
 	var charFlag bool
+	var finalExitCode int
 
 	flag.BoolVar(&lineFlag, "l", false, "Count lines")
 	flag.BoolVar(&wordFlag, "w", false, "Count words")
 	flag.BoolVar(&charFlag, "c", false, "Count characters")
 	flag.Parse()
 
-	if flag.NArg() != 1 {
+	if flag.NArg() == 0 {
 		fmt.Fprintf(os.Stderr, "Usage: %s [-l | -w | -c] <filename>\n", os.Args[0])
 		flag.PrintDefaults()
 		os.Exit(1)
@@ -30,33 +31,44 @@ func main() {
 		lineFlag, wordFlag, charFlag = true, true, true
 	}
 
-	filePath := flag.Arg(0)
-	file := validateFile(filePath)
-	defer file.Close()
-
-	evaluateFile(filePath, file, lineFlag, wordFlag, charFlag)
+	for _, filePath := range flag.Args() {
+		file, exitCode := validateFile(filePath)
+		finalExitCode = exitCode
+		if file != nil {
+			defer file.Close()
+		}
+		if file == nil {
+			continue
+		}
+		evaluateFile(filePath, file, lineFlag, wordFlag, charFlag)
+	}
+	os.Exit(finalExitCode)
 }
 
-func validateFile(filePath string) *os.File {
+func validateFile(filePath string) (*os.File, int) {
 	file, err := os.Open(filePath)
+	exitCode := 0
 
 	if errors.Is(err, os.ErrNotExist) {
 		fmt.Fprintf(os.Stderr, "%s: %s: open: No such file or directory\n", os.Args[0], filePath)
-		os.Exit(1)
+		exitCode = 1
+		return nil, exitCode
 	}
 
 	if errors.Is(err, os.ErrPermission) {
 		fmt.Fprintf(os.Stderr, "%s: %s: open: Permission denied\n", os.Args[0], filePath)
-		os.Exit(1)
+		exitCode = 1
+		return nil, exitCode
 	}
 
 	info, _ := file.Stat()
 	if info.IsDir() {
 		fmt.Fprintf(os.Stderr, "%s: %s: read: Is a directory\n", os.Args[0], filePath)
-		os.Exit(1)
+		exitCode = 1
+		return nil, exitCode
 	}
 
-	return file
+	return file, exitCode
 }
 
 func evaluateFile(filePath string, file *os.File, lineFlag, wordFlag, charFlag bool) {
