@@ -31,14 +31,12 @@ func main() {
 	}
 
 	filePath := flag.Arg(0)
-	file := validateFile(filePath)
-	defer file.Close()
-
-	evaluateFile(filePath, file, lineFlag, wordFlag, charFlag)
+	evaluateFile(filePath, lineFlag, wordFlag, charFlag)
 }
 
-func validateFile(filePath string) *os.File {
+func evaluateFile(filePath string, lineFlag, wordFlag, charFlag bool) {
 	file, err := os.Open(filePath)
+	defer file.Close()
 
 	if errors.Is(err, os.ErrNotExist) {
 		fmt.Fprintf(os.Stderr, "%s: %s: open: No such file or directory\n", os.Args[0], filePath)
@@ -56,10 +54,6 @@ func validateFile(filePath string) *os.File {
 		os.Exit(1)
 	}
 
-	return file
-}
-
-func evaluateFile(filePath string, file *os.File, lineFlag, wordFlag, charFlag bool) {
 	if lineFlag {
 		lineCount, lineCountErr := lineCounter(file)
 		if lineCountErr != nil {
