@@ -37,7 +37,6 @@ func main() {
 	evaluateFile(filePath, file, lineFlag, wordFlag, charFlag)
 }
 
-// need to think about how to write test cases for this function
 func validateFile(filePath string) *os.File {
 	file, err := os.Open(filePath)
 
@@ -60,7 +59,6 @@ func validateFile(filePath string) *os.File {
 	return file
 }
 
-// need to think about how to write test cases for this function as there is not return value
 func evaluateFile(filePath string, file *os.File, lineFlag, wordFlag, charFlag bool) {
 	if lineFlag {
 		lineCount, lineCountErr := lineCounter(file)
@@ -92,7 +90,6 @@ func evaluateFile(filePath string, file *os.File, lineFlag, wordFlag, charFlag b
 	fmt.Printf(" %s\n", filePath)
 }
 
-// test cases written
 func lineCounter(file io.Reader) (int, error) {
 	lineCount := 0
 
@@ -111,7 +108,6 @@ func lineCounter(file io.Reader) (int, error) {
 	return lineCount, nil
 }
 
-// test cases written
 func wordCounter(file io.Reader) (int, error) {
 	wordCount := 0
 
@@ -130,7 +126,6 @@ func wordCounter(file io.Reader) (int, error) {
 	return wordCount, nil
 }
 
-// test cases written
 func charCounter(file io.Reader) (int, error) {
 	charCount := 0
 
