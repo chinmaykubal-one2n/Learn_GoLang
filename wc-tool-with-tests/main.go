@@ -9,15 +9,32 @@ import (
 	"os"
 )
 
+type totalCounts struct {
+	lineCount int
+	wordCount int
+	charCount int
+}
+
+type flags struct {
+	lineFlag bool
+	wordFlag bool
+	charFlag bool
+}
+
 func main() {
-	var lineFlag bool
-	var wordFlag bool
-	var charFlag bool
 	var osExitCode int
 
-	flag.BoolVar(&lineFlag, "l", false, "Count lines")
-	flag.BoolVar(&wordFlag, "w", false, "Count words")
-	flag.BoolVar(&charFlag, "c", false, "Count characters")
+	allFlags := flags{}
+
+	totalCounts := totalCounts{
+		lineCount: 0,
+		wordCount: 0,
+		charCount: 0,
+	}
+
+	flag.BoolVar(&allFlags.lineFlag, "l", false, "Count lines")
+	flag.BoolVar(&allFlags.wordFlag, "w", false, "Count words")
+	flag.BoolVar(&allFlags.charFlag, "c", false, "Count characters")
 	flag.Parse()
 
 	if flag.NArg() == 0 {
@@ -26,12 +43,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	if !lineFlag && !wordFlag && !charFlag {
-		lineFlag, wordFlag, charFlag = true, true, true
+	if !allFlags.lineFlag && !allFlags.wordFlag && !allFlags.charFlag {
+		allFlags.lineFlag, allFlags.wordFlag, allFlags.charFlag = true, true, true
 	}
 
 	for _, filePath := range flag.Args() {
-		output, errMsg, exitCode := evaluateFile(filePath, lineFlag, wordFlag, charFlag)
+		output, errMsg, exitCode := evaluateFile(filePath, &allFlags, &totalCounts)
 		if exitCode != 0 {
 			osExitCode = exitCode
 			fmt.Fprint(os.Stderr, errMsg)
@@ -39,10 +56,26 @@ func main() {
 			fmt.Print(output)
 		}
 	}
+
+	if flag.NArg() > 1 {
+		if totalCounts.lineCount > 0 {
+			fmt.Printf("%8d", totalCounts.lineCount)
+		}
+		if totalCounts.wordCount > 0 {
+			fmt.Printf("%8d", totalCounts.wordCount)
+		}
+		if totalCounts.charCount > 0 {
+			fmt.Printf("%8d", totalCounts.charCount)
+		}
+		fmt.Printf(" total\n")
+
+		// fmt.Printf("%8d%8d%8d total\n", totalCounts.lineCount, totalCounts.wordCount, totalCounts.charCount)
+	}
+
 	os.Exit(osExitCode)
 }
 
-func evaluateFile(filePath string, lineFlag, wordFlag, charFlag bool) (output string, errMsg string, exitCode int) {
+func evaluateFile(filePath string, allFlags *flags, totalCounts *totalCounts) (output string, errMsg string, exitCode int) {
 	file, err := os.Open(filePath)
 
 	if err != nil {
@@ -63,29 +96,32 @@ func evaluateFile(filePath string, lineFlag, wordFlag, charFlag bool) (output st
 
 	var result string
 
-	if lineFlag {
+	if allFlags.lineFlag {
 		lineCount, err := lineCounter(file)
 		if err != nil {
 			return "", fmt.Sprintf("Error reading lines from %s: %v\n", filePath, err), 1
 		}
+		totalCounts.lineCount += lineCount
 		result += fmt.Sprintf("%8d", lineCount)
 		file.Seek(0, io.SeekStart)
 	}
 
-	if wordFlag {
+	if allFlags.wordFlag {
 		wordCount, err := wordCounter(file)
 		if err != nil {
 			return "", fmt.Sprintf("Error reading words from %s: %v\n", filePath, err), 1
 		}
+		totalCounts.wordCount += wordCount
 		result += fmt.Sprintf("%8d", wordCount)
 		file.Seek(0, io.SeekStart)
 	}
 
-	if charFlag {
+	if allFlags.charFlag {
 		charCount, err := charCounter(file)
 		if err != nil {
 			return "", fmt.Sprintf("Error reading characters from %s: %v\n", filePath, err), 1
 		}
+		totalCounts.charCount += charCount
 		result += fmt.Sprintf("%8d", charCount)
 		file.Seek(0, io.SeekStart)
 	}
@@ -94,6 +130,7 @@ func evaluateFile(filePath string, lineFlag, wordFlag, charFlag bool) (output st
 	return result, "", 0
 }
 
+// combine the three functions into one
 func lineCounter(file io.Reader) (int, error) {
 	lineCount := 0
 
