@@ -13,6 +13,7 @@ func main() {
 	var lineFlag bool
 	var wordFlag bool
 	var charFlag bool
+	var osExitCode int
 
 	flag.BoolVar(&lineFlag, "l", false, "Count lines")
 	flag.BoolVar(&wordFlag, "w", false, "Count words")
@@ -32,11 +33,13 @@ func main() {
 	for _, filePath := range flag.Args() {
 		output, errMsg, exitCode := evaluateFile(filePath, lineFlag, wordFlag, charFlag)
 		if exitCode != 0 {
+			osExitCode = exitCode
 			fmt.Fprint(os.Stderr, errMsg)
 		} else {
 			fmt.Print(output)
 		}
 	}
+	os.Exit(osExitCode)
 }
 
 func evaluateFile(filePath string, lineFlag, wordFlag, charFlag bool) (output string, errMsg string, exitCode int) {
