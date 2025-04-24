@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"log"
 	"os"
 )
 
@@ -20,7 +19,7 @@ func main() {
 	flag.BoolVar(&charFlag, "c", false, "Count characters")
 	flag.Parse()
 
-	if flag.NArg() != 1 {
+	if flag.NArg() == 0 {
 		fmt.Fprintf(os.Stderr, "Usage: %s [-l | -w | -c] <filename>\n", os.Args[0])
 		flag.PrintDefaults()
 		os.Exit(1)
@@ -30,58 +29,66 @@ func main() {
 		lineFlag, wordFlag, charFlag = true, true, true
 	}
 
-	filePath := flag.Arg(0)
-	evaluateFile(filePath, lineFlag, wordFlag, charFlag)
+	for _, filePath := range flag.Args() {
+		output, errMsg, exitCode := evaluateFile(filePath, lineFlag, wordFlag, charFlag)
+		if exitCode != 0 {
+			fmt.Fprint(os.Stderr, errMsg)
+		} else {
+			fmt.Print(output)
+		}
+	}
 }
 
-func evaluateFile(filePath string, lineFlag, wordFlag, charFlag bool) {
+func evaluateFile(filePath string, lineFlag, wordFlag, charFlag bool) (output string, errMsg string, exitCode int) {
 	file, err := os.Open(filePath)
-	defer file.Close()
 
-	if errors.Is(err, os.ErrNotExist) {
-		fmt.Fprintf(os.Stderr, "%s: %s: open: No such file or directory\n", os.Args[0], filePath)
-		os.Exit(1)
-	}
-
-	if errors.Is(err, os.ErrPermission) {
-		fmt.Fprintf(os.Stderr, "%s: %s: open: Permission denied\n", os.Args[0], filePath)
-		os.Exit(1)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return "", fmt.Sprintf("%s: %s: open: No such file or directory\n", os.Args[0], filePath), 1
+		}
+		if errors.Is(err, os.ErrPermission) {
+			return "", fmt.Sprintf("%s: %s: open: Permission denied\n", os.Args[0], filePath), 1
+		}
 	}
 
 	info, _ := file.Stat()
 	if info.IsDir() {
-		fmt.Fprintf(os.Stderr, "%s: %s: read: Is a directory\n", os.Args[0], filePath)
-		os.Exit(1)
+		return "", fmt.Sprintf("%s: %s: read: Is a directory\n", os.Args[0], filePath), 1
 	}
 
+	defer file.Close()
+
+	var result string
+
 	if lineFlag {
-		lineCount, lineCountErr := lineCounter(file)
-		if lineCountErr != nil {
-			log.Fatal(lineCountErr)
+		lineCount, err := lineCounter(file)
+		if err != nil {
+			return "", fmt.Sprintf("Error reading lines from %s: %v\n", filePath, err), 1
 		}
-		fmt.Printf("%8d", lineCount)
+		result += fmt.Sprintf("%8d", lineCount)
 		file.Seek(0, io.SeekStart)
 	}
 
 	if wordFlag {
-		wordCount, wordCountErr := wordCounter(file)
-		if wordCountErr != nil {
-			log.Fatal(wordCountErr)
+		wordCount, err := wordCounter(file)
+		if err != nil {
+			return "", fmt.Sprintf("Error reading words from %s: %v\n", filePath, err), 1
 		}
-		fmt.Printf("%8d", wordCount)
+		result += fmt.Sprintf("%8d", wordCount)
 		file.Seek(0, io.SeekStart)
 	}
 
 	if charFlag {
-		charCount, charCountErr := charCounter(file)
-		if charCountErr != nil {
-			log.Fatal(charCountErr)
+		charCount, err := charCounter(file)
+		if err != nil {
+			return "", fmt.Sprintf("Error reading characters from %s: %v\n", filePath, err), 1
 		}
-		fmt.Printf("%8d", charCount)
+		result += fmt.Sprintf("%8d", charCount)
 		file.Seek(0, io.SeekStart)
 	}
 
-	fmt.Printf(" %s\n", filePath)
+	result += fmt.Sprintf(" %s\n", filePath)
+	return result, "", 0
 }
 
 func lineCounter(file io.Reader) (int, error) {
