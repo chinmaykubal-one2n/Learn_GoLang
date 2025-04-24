@@ -58,18 +58,16 @@ func main() {
 	}
 
 	if flag.NArg() > 1 {
-		if totalCounts.lineCount > 0 {
+		if allFlags.lineFlag {
 			fmt.Printf("%8d", totalCounts.lineCount)
 		}
-		if totalCounts.wordCount > 0 {
+		if allFlags.wordFlag {
 			fmt.Printf("%8d", totalCounts.wordCount)
 		}
-		if totalCounts.charCount > 0 {
+		if allFlags.charFlag {
 			fmt.Printf("%8d", totalCounts.charCount)
 		}
 		fmt.Printf(" total\n")
-
-		// fmt.Printf("%8d%8d%8d total\n", totalCounts.lineCount, totalCounts.wordCount, totalCounts.charCount)
 	}
 
 	os.Exit(osExitCode)
