@@ -23,14 +23,8 @@ type flags struct {
 
 func main() {
 	var osExitCode int
-
-	allFlags := flags{}
-
-	totalCounts := totalCounts{
-		lineCount: 0,
-		wordCount: 0,
-		charCount: 0,
-	}
+	allFlags := flags{}          // all flags are false by default
+	totalCounts := totalCounts{} // all counts are 0 by default
 
 	flag.BoolVar(&allFlags.lineFlag, "l", false, "Count lines")
 	flag.BoolVar(&allFlags.wordFlag, "w", false, "Count words")
@@ -74,20 +68,23 @@ func main() {
 }
 
 func evaluateFile(filePath string, allFlags *flags, totalCounts *totalCounts) (output string, errMsg string, exitCode int) {
+	const errorCode = 1
+	const successCode = 0
+
 	file, err := os.Open(filePath)
 
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return "", fmt.Sprintf("%s: %s: open: No such file or directory\n", os.Args[0], filePath), 1
+			return "", fmt.Sprintf("%s: %s: open: No such file or directory\n", os.Args[0], filePath), errorCode
 		}
 		if errors.Is(err, os.ErrPermission) {
-			return "", fmt.Sprintf("%s: %s: open: Permission denied\n", os.Args[0], filePath), 1
+			return "", fmt.Sprintf("%s: %s: open: Permission denied\n", os.Args[0], filePath), errorCode
 		}
 	}
 
 	info, _ := file.Stat()
 	if info.IsDir() {
-		return "", fmt.Sprintf("%s: %s: read: Is a directory\n", os.Args[0], filePath), 1
+		return "", fmt.Sprintf("%s: %s: read: Is a directory\n", os.Args[0], filePath), errorCode
 	}
 
 	defer file.Close()
@@ -97,7 +94,7 @@ func evaluateFile(filePath string, allFlags *flags, totalCounts *totalCounts) (o
 	if allFlags.lineFlag {
 		lineCount, err := lineCounter(file)
 		if err != nil {
-			return "", fmt.Sprintf("Error reading lines from %s: %v\n", filePath, err), 1
+			return "", fmt.Sprintf("Error reading lines from %s: %v\n", filePath, err), errorCode
 		}
 		totalCounts.lineCount += lineCount
 		result += fmt.Sprintf("%8d", lineCount)
@@ -107,7 +104,7 @@ func evaluateFile(filePath string, allFlags *flags, totalCounts *totalCounts) (o
 	if allFlags.wordFlag {
 		wordCount, err := wordCounter(file)
 		if err != nil {
-			return "", fmt.Sprintf("Error reading words from %s: %v\n", filePath, err), 1
+			return "", fmt.Sprintf("Error reading words from %s: %v\n", filePath, err), errorCode
 		}
 		totalCounts.wordCount += wordCount
 		result += fmt.Sprintf("%8d", wordCount)
@@ -117,7 +114,7 @@ func evaluateFile(filePath string, allFlags *flags, totalCounts *totalCounts) (o
 	if allFlags.charFlag {
 		charCount, err := charCounter(file)
 		if err != nil {
-			return "", fmt.Sprintf("Error reading characters from %s: %v\n", filePath, err), 1
+			return "", fmt.Sprintf("Error reading characters from %s: %v\n", filePath, err), errorCode
 		}
 		totalCounts.charCount += charCount
 		result += fmt.Sprintf("%8d", charCount)
@@ -125,7 +122,7 @@ func evaluateFile(filePath string, allFlags *flags, totalCounts *totalCounts) (o
 	}
 
 	result += fmt.Sprintf(" %s\n", filePath)
-	return result, "", 0
+	return result, "", successCode
 }
 
 // combine the three functions into one
