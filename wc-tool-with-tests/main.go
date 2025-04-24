@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
 )
 
 type totalCounts struct {
@@ -21,10 +22,12 @@ type flags struct {
 	charFlag bool
 }
 
+var mu sync.Mutex
+
 func main() {
 	var osExitCode int
-	allFlags := flags{}          // all flags are false by default
-	totalCounts := totalCounts{} // all counts are 0 by default
+	allFlags := flags{}
+	totals := totalCounts{}
 
 	flag.BoolVar(&allFlags.lineFlag, "l", false, "Count lines")
 	flag.BoolVar(&allFlags.wordFlag, "w", false, "Count words")
@@ -41,62 +44,76 @@ func main() {
 		allFlags.lineFlag, allFlags.wordFlag, allFlags.charFlag = true, true, true
 	}
 
+	var wg sync.WaitGroup
+
 	for _, filePath := range flag.Args() {
-		output, errMsg, exitCode := evaluateFile(filePath, &allFlags, &totalCounts)
-		if exitCode != 0 {
-			osExitCode = exitCode
-			fmt.Fprint(os.Stderr, errMsg)
-		} else {
-			fmt.Print(output)
-		}
+		wg.Add(1)
+		go func(path string) {
+			defer wg.Done()
+			output, errMsg, exitCode := evaluateFile(path, &allFlags, &totals)
+			if exitCode != 0 {
+				mu.Lock()
+				fmt.Fprint(os.Stderr, errMsg)
+				osExitCode = exitCode
+				mu.Unlock()
+			} else {
+				mu.Lock()
+				fmt.Print(output)
+				mu.Unlock()
+			}
+		}(filePath)
 	}
+
+	wg.Wait()
 
 	if flag.NArg() > 1 {
 		if allFlags.lineFlag {
-			fmt.Printf("%8d", totalCounts.lineCount)
+			fmt.Printf("%8d", totals.lineCount)
 		}
 		if allFlags.wordFlag {
-			fmt.Printf("%8d", totalCounts.wordCount)
+			fmt.Printf("%8d", totals.wordCount)
 		}
 		if allFlags.charFlag {
-			fmt.Printf("%8d", totalCounts.charCount)
+			fmt.Printf("%8d", totals.charCount)
 		}
-		fmt.Printf(" total\n")
+		fmt.Println(" total")
 	}
 
 	os.Exit(osExitCode)
 }
 
-func evaluateFile(filePath string, allFlags *flags, totalCounts *totalCounts) (output string, errMsg string, exitCode int) {
+func evaluateFile(filePath string, allFlags *flags, totals *totalCounts) (output string, errMsg string, exitCode int) {
 	const errorCode = 1
 	const successCode = 0
+	const emptyString = ""
 
 	file, err := os.Open(filePath)
-
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return "", fmt.Sprintf("%s: %s: open: No such file or directory\n", os.Args[0], filePath), errorCode
+			return emptyString, fmt.Sprintf("%s: %s: open: No such file or directory\n", os.Args[0], filePath), errorCode
 		}
 		if errors.Is(err, os.ErrPermission) {
-			return "", fmt.Sprintf("%s: %s: open: Permission denied\n", os.Args[0], filePath), errorCode
+			return emptyString, fmt.Sprintf("%s: %s: open: Permission denied\n", os.Args[0], filePath), errorCode
 		}
+		return emptyString, fmt.Sprintf("%s: %s: open: %v\n", os.Args[0], filePath, err), errorCode
 	}
+	defer file.Close()
 
 	info, _ := file.Stat()
 	if info.IsDir() {
-		return "", fmt.Sprintf("%s: %s: read: Is a directory\n", os.Args[0], filePath), errorCode
+		return emptyString, fmt.Sprintf("%s: %s: read: Is a directory\n", os.Args[0], filePath), errorCode
 	}
-
-	defer file.Close()
 
 	var result string
 
 	if allFlags.lineFlag {
 		lineCount, err := lineCounter(file)
 		if err != nil {
-			return "", fmt.Sprintf("Error reading lines from %s: %v\n", filePath, err), errorCode
+			return emptyString, fmt.Sprintf("Error reading lines from %s: %v\n", filePath, err), errorCode
 		}
-		totalCounts.lineCount += lineCount
+		mu.Lock()
+		totals.lineCount += lineCount
+		mu.Unlock()
 		result += fmt.Sprintf("%8d", lineCount)
 		file.Seek(0, io.SeekStart)
 	}
@@ -104,9 +121,11 @@ func evaluateFile(filePath string, allFlags *flags, totalCounts *totalCounts) (o
 	if allFlags.wordFlag {
 		wordCount, err := wordCounter(file)
 		if err != nil {
-			return "", fmt.Sprintf("Error reading words from %s: %v\n", filePath, err), errorCode
+			return emptyString, fmt.Sprintf("Error reading words from %s: %v\n", filePath, err), errorCode
 		}
-		totalCounts.wordCount += wordCount
+		mu.Lock()
+		totals.wordCount += wordCount
+		mu.Unlock()
 		result += fmt.Sprintf("%8d", wordCount)
 		file.Seek(0, io.SeekStart)
 	}
@@ -114,18 +133,18 @@ func evaluateFile(filePath string, allFlags *flags, totalCounts *totalCounts) (o
 	if allFlags.charFlag {
 		charCount, err := charCounter(file)
 		if err != nil {
-			return "", fmt.Sprintf("Error reading characters from %s: %v\n", filePath, err), errorCode
+			return emptyString, fmt.Sprintf("Error reading characters from %s: %v\n", filePath, err), errorCode
 		}
-		totalCounts.charCount += charCount
+		mu.Lock()
+		totals.charCount += charCount
+		mu.Unlock()
 		result += fmt.Sprintf("%8d", charCount)
-		file.Seek(0, io.SeekStart)
 	}
 
 	result += fmt.Sprintf(" %s\n", filePath)
-	return result, "", successCode
+	return result, emptyString, successCode
 }
 
-// combine the three functions into one
 func lineCounter(file io.Reader) (int, error) {
 	lineCount := 0
 
