@@ -2,6 +2,7 @@
 package main
 
 import (
+	"os"
 	"strings"
 	"testing"
 )
@@ -81,4 +82,54 @@ func TestCharCounter(t *testing.T) {
 			t.Errorf("Expected %d characters, got %d for input %s", testCase.expect, count, testCase.input)
 		}
 	}
+}
+
+func TestEvaluateFile(t *testing.T) {
+	tmpFile, err := os.CreateTemp("", "testfile.txt")
+	if err != nil {
+		t.Fatalf("Failed to create temp file: %v", err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	content := "Hello world\nThis is Go\n"
+	_, err = tmpFile.WriteString(content)
+	if err != nil {
+		t.Fatalf("Failed to write to temp file: %v", err)
+	}
+	tmpFile.Close()
+
+	allFlags := flags{
+		lineFlag: true,
+		wordFlag: true,
+		charFlag: true,
+	}
+
+	totals := totalCounts{}
+
+	result, errMsg, exitCode := evaluateFile(tmpFile.Name(), &allFlags, &totals)
+
+	if exitCode != 0 {
+		t.Errorf("Expected exit code 0, got %d", exitCode)
+	}
+	if errMsg != "" {
+		t.Errorf("Expected empty error message, got: %s", errMsg)
+	}
+	if !strings.HasSuffix(result, tmpFile.Name()+"\n") {
+		t.Errorf("Output did not end with filename. Got: %q", result)
+	}
+
+	expectedLineCount := 2
+	expectedWordCount := 5
+	expectedCharCount := len(content)
+
+	if totals.lineCount != expectedLineCount {
+		t.Errorf("Expected line count %d, got %d", expectedLineCount, totals.lineCount)
+	}
+	if totals.wordCount != expectedWordCount {
+		t.Errorf("Expected word count %d, got %d", expectedWordCount, totals.wordCount)
+	}
+	if totals.charCount != expectedCharCount {
+		t.Errorf("Expected char count %d, got %d", expectedCharCount, totals.charCount)
+	}
+
 }
