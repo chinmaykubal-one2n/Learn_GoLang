@@ -145,14 +145,13 @@ func evaluateFile(filePath string, allFlags *flags, totals *totalCounts) (output
 	return result, emptyString, successCode
 }
 
-func lineCounter(file io.Reader) (int, error) {
-	lineCount := 0
-
+func genericCounter(file io.Reader, split bufio.SplitFunc) (int, error) {
+	count := 0
 	scanner := bufio.NewScanner(file)
-	scanner.Split(bufio.ScanLines)
+	scanner.Split(split)
 
 	for scanner.Scan() {
-		lineCount++
+		count++
 	}
 
 	err := scanner.Err()
@@ -160,41 +159,17 @@ func lineCounter(file io.Reader) (int, error) {
 		return 0, err
 	}
 
-	return lineCount, nil
+	return count, nil
+}
+
+func lineCounter(file io.Reader) (int, error) {
+	return genericCounter(file, bufio.ScanLines)
 }
 
 func wordCounter(file io.Reader) (int, error) {
-	wordCount := 0
-
-	scanner := bufio.NewScanner(file)
-	scanner.Split(bufio.ScanWords)
-
-	for scanner.Scan() {
-		wordCount++
-	}
-
-	err := scanner.Err()
-	if err != nil {
-		return 0, err
-	}
-
-	return wordCount, nil
+	return genericCounter(file, bufio.ScanWords)
 }
 
 func charCounter(file io.Reader) (int, error) {
-	charCount := 0
-
-	scanner := bufio.NewScanner(file)
-	scanner.Split(bufio.ScanRunes)
-
-	for scanner.Scan() {
-		charCount++
-	}
-
-	err := scanner.Err()
-	if err != nil {
-		return 0, err
-	}
-
-	return charCount, nil
+	return genericCounter(file, bufio.ScanRunes)
 }
