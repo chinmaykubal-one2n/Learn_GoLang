@@ -87,22 +87,11 @@ func evaluateFile(filePath string, allFlags *flags, totals *totalCounts) (output
 	const successCode = 0
 	const emptyString = ""
 
-	file, err := os.Open(filePath)
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return emptyString, fmt.Sprintf("%s: %s: open: No such file or directory\n", os.Args[0], filePath), errorCode
-		}
-		if errors.Is(err, os.ErrPermission) {
-			return emptyString, fmt.Sprintf("%s: %s: open: Permission denied\n", os.Args[0], filePath), errorCode
-		}
-		return emptyString, fmt.Sprintf("%s: %s: open: %v\n", os.Args[0], filePath, err), errorCode
+	file, errMsg, exitCode := validateFile(filePath)
+	if exitCode != successCode {
+		return emptyString, errMsg, exitCode
 	}
 	defer file.Close()
-
-	info, _ := file.Stat()
-	if info.IsDir() {
-		return emptyString, fmt.Sprintf("%s: %s: read: Is a directory\n", os.Args[0], filePath), errorCode
-	}
 
 	var result string
 
@@ -145,6 +134,42 @@ func evaluateFile(filePath string, allFlags *flags, totals *totalCounts) (output
 	return result, emptyString, successCode
 }
 
+func validateFile(filePath string) (*os.File, string, int) {
+	const errorCode = 1
+	const successCode = 0
+	const emptyString = ""
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, fmt.Sprintf("%s: %s: open: No such file or directory\n", os.Args[0], filePath), errorCode
+		}
+		if errors.Is(err, os.ErrPermission) {
+			return nil, fmt.Sprintf("%s: %s: open: Permission denied\n", os.Args[0], filePath), errorCode
+		}
+	}
+
+	info, _ := file.Stat()
+	if info.IsDir() {
+		file.Close()
+		return nil, fmt.Sprintf("%s: %s: read: Is a directory\n", os.Args[0], filePath), errorCode
+	}
+
+	return file, emptyString, successCode
+}
+
+func lineCounter(file io.Reader) (int, error) {
+	return genericCounter(file, bufio.ScanLines)
+}
+
+func wordCounter(file io.Reader) (int, error) {
+	return genericCounter(file, bufio.ScanWords)
+}
+
+func charCounter(file io.Reader) (int, error) {
+	return genericCounter(file, bufio.ScanRunes)
+}
+
 func genericCounter(file io.Reader, split bufio.SplitFunc) (int, error) {
 	count := 0
 	scanner := bufio.NewScanner(file)
@@ -160,16 +185,4 @@ func genericCounter(file io.Reader, split bufio.SplitFunc) (int, error) {
 	}
 
 	return count, nil
-}
-
-func lineCounter(file io.Reader) (int, error) {
-	return genericCounter(file, bufio.ScanLines)
-}
-
-func wordCounter(file io.Reader) (int, error) {
-	return genericCounter(file, bufio.ScanWords)
-}
-
-func charCounter(file io.Reader) (int, error) {
-	return genericCounter(file, bufio.ScanRunes)
 }
