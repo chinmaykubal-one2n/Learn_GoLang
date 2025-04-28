@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"flag"
 	"fmt"
@@ -35,9 +36,11 @@ func main() {
 	flag.Parse()
 
 	if flag.NArg() == 0 {
-		fmt.Fprintf(os.Stderr, "Usage: %s [-l | -w | -c] <filename>\n", os.Args[0])
-		flag.PrintDefaults()
-		os.Exit(1)
+		readFromStdin()
+		os.Exit(osExitCode)
+		// fmt.Fprintf(os.Stderr, "Usage: %s [-l | -w | -c] <filename>\n", os.Args[0])
+		// flag.PrintDefaults()
+		// os.Exit(1)
 	}
 
 	if !allFlags.lineFlag && !allFlags.wordFlag && !allFlags.charFlag {
@@ -185,4 +188,41 @@ func genericCounter(file io.Reader, split bufio.SplitFunc) (int, error) {
 	}
 
 	return count, nil
+}
+
+func readFromStdin() {
+	totalCounts, err := countFromStdin(os.Stdin)
+	if err != nil {
+		fmt.Fprint(os.Stderr, "Error:", err)
+		os.Exit(1)
+	}
+	fmt.Printf("\n%8d%8d%8d\n", totalCounts.lineCount, totalCounts.wordCount, totalCounts.charCount)
+}
+
+func countFromStdin(stdInput io.Reader) (totalCounts, error) {
+	input, err := io.ReadAll(stdInput)
+	if err != nil {
+		return totalCounts{}, err
+	}
+
+	lines, err := lineCounter(bytes.NewReader(input))
+	if err != nil {
+		return totalCounts{}, err
+	}
+
+	words, err := wordCounter(bytes.NewReader(input))
+	if err != nil {
+		return totalCounts{}, err
+	}
+
+	chars, err := charCounter(bytes.NewReader(input))
+	if err != nil {
+		return totalCounts{}, err
+	}
+
+	return totalCounts{
+		lineCount: lines,
+		wordCount: words,
+		charCount: chars,
+	}, nil
 }
