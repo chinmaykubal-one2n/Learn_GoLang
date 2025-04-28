@@ -36,7 +36,7 @@ func main() {
 	flag.Parse()
 
 	if flag.NArg() == 0 {
-		readFromStdin(allFlags)
+		readFromStdin(&allFlags)
 		os.Exit(osExitCode)
 		// fmt.Fprintf(os.Stderr, "Usage: %s [-l | -w | -c] <filename>\n", os.Args[0])
 		// flag.PrintDefaults()
@@ -70,14 +70,14 @@ func main() {
 	wg.Wait()
 
 	if flag.NArg() > 1 {
-		printAllCounts(allFlags, totals)
+		printAllCounts(&allFlags, &totals)
 		fmt.Println(" total")
 	}
 
 	os.Exit(osExitCode)
 }
 
-func printAllCounts(allFlags flags, totalCounts totalCounts) {
+func printAllCounts(allFlags *flags, totalCounts *totalCounts) {
 	if allFlags.lineFlag {
 		fmt.Printf("%8d", totalCounts.lineCount)
 	}
@@ -194,7 +194,7 @@ func genericCounter(file io.Reader, split bufio.SplitFunc) (int, error) {
 	return count, nil
 }
 
-func readFromStdin(allFlags flags) {
+func readFromStdin(allFlags *flags) {
 	totalCounts, err := countFromStdin(os.Stdin)
 	if err != nil {
 		fmt.Fprint(os.Stderr, "Error:", err)
@@ -206,7 +206,7 @@ func readFromStdin(allFlags flags) {
 	}
 
 	fmt.Println()
-	printAllCounts(allFlags, totalCounts)
+	printAllCounts(allFlags, &totalCounts)
 	fmt.Println()
 }
 
