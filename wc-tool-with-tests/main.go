@@ -36,7 +36,7 @@ func main() {
 	flag.Parse()
 
 	if flag.NArg() == 0 {
-		readFromStdin()
+		readFromStdin(allFlags)
 		os.Exit(osExitCode)
 		// fmt.Fprintf(os.Stderr, "Usage: %s [-l | -w | -c] <filename>\n", os.Args[0])
 		// flag.PrintDefaults()
@@ -190,13 +190,28 @@ func genericCounter(file io.Reader, split bufio.SplitFunc) (int, error) {
 	return count, nil
 }
 
-func readFromStdin() {
+func readFromStdin(allFlags flags) {
 	totalCounts, err := countFromStdin(os.Stdin)
 	if err != nil {
 		fmt.Fprint(os.Stderr, "Error:", err)
 		os.Exit(1)
 	}
-	fmt.Printf("\n%8d%8d%8d\n", totalCounts.lineCount, totalCounts.wordCount, totalCounts.charCount)
+
+	if !allFlags.lineFlag && !allFlags.wordFlag && !allFlags.charFlag {
+		allFlags.lineFlag, allFlags.wordFlag, allFlags.charFlag = true, true, true
+	}
+
+	fmt.Println()
+	if allFlags.lineFlag {
+		fmt.Printf("%8d", totalCounts.lineCount)
+	}
+	if allFlags.wordFlag {
+		fmt.Printf("%8d", totalCounts.wordCount)
+	}
+	if allFlags.charFlag {
+		fmt.Printf("%8d", totalCounts.charCount)
+	}
+	fmt.Println()
 }
 
 func countFromStdin(stdInput io.Reader) (totalCounts, error) {
