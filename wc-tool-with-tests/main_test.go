@@ -2,12 +2,23 @@
 package main
 
 import (
+	"bytes"
 	"os"
 	"strings"
 	"testing"
 )
 
 type lineCounterTest struct {
+	input  string
+	expect int
+}
+
+type wordCounterTest struct {
+	input  string
+	expect int
+}
+
+type charCounterTest struct {
 	input  string
 	expect int
 }
@@ -19,6 +30,20 @@ var lineCounterTests = []lineCounterTest{
 	{input: "line1\nline2\nline3\n", expect: 3},
 	{input: "line1\nline2\nline3", expect: 3},
 	{input: "line1", expect: 1},
+}
+
+// expectations are set based on the output of wc command
+var wordCounterTests = []wordCounterTest{
+	{input: "Hello Golang.", expect: 2},
+	{input: "This is a simple file !!", expect: 6},
+	{input: "With some text inside it with some numbers 1,2,3,4,5 and some special chars.!@#$%^&*()", expect: 13},
+}
+
+// expectations are set based on the output of wc command
+var charCounterTests = []charCounterTest{
+	{input: "Hello Golang.", expect: 13},
+	{input: "This is a simple file !!", expect: 24},
+	{input: "With some text inside it with some numbers 1,2,3,4,5 and some special chars.!@#$%^&*()", expect: 86},
 }
 
 func TestLineCounter(t *testing.T) {
@@ -34,18 +59,6 @@ func TestLineCounter(t *testing.T) {
 	}
 }
 
-type wordCounterTest struct {
-	input  string
-	expect int
-}
-
-// expectations are set based on the output of wc command
-var wordCounterTests = []wordCounterTest{
-	{input: "Hello Golang.", expect: 2},
-	{input: "This is a simple file !!", expect: 6},
-	{input: "With some text inside it with some numbers 1,2,3,4,5 and some special chars.!@#$%^&*()", expect: 13},
-}
-
 func TestWordCounter(t *testing.T) {
 	for _, testCase := range wordCounterTests {
 		reader := strings.NewReader(testCase.input)
@@ -57,18 +70,6 @@ func TestWordCounter(t *testing.T) {
 			t.Errorf("Expected %d words, got %d for input %s", testCase.expect, count, testCase.input)
 		}
 	}
-}
-
-type charCounterTest struct {
-	input  string
-	expect int
-}
-
-// expectations are set based on the output of wc command
-var charCounterTests = []charCounterTest{
-	{input: "Hello Golang.", expect: 13},
-	{input: "This is a simple file !!", expect: 24},
-	{input: "With some text inside it with some numbers 1,2,3,4,5 and some special chars.!@#$%^&*()", expect: 86},
 }
 
 func TestCharCounter(t *testing.T) {
@@ -131,5 +132,24 @@ func TestEvaluateFile(t *testing.T) {
 	if totals.charCount != expectedCharCount {
 		t.Errorf("Expected char count %d, got %d", expectedCharCount, totals.charCount)
 	}
+}
 
+func TestCountFromStdin(t *testing.T) {
+	input := "abc\ndef ghi jkl"
+	reader := bytes.NewReader([]byte(input))
+
+	counts, err := countFromStdin(reader)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	expected := totalCounts{
+		lineCount: 2,
+		wordCount: 4,
+		charCount: 15,
+	}
+
+	if counts != expected {
+		t.Errorf("Expected %v, got %v", expected, counts)
+	}
 }
