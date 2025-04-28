@@ -70,19 +70,23 @@ func main() {
 	wg.Wait()
 
 	if flag.NArg() > 1 {
-		if allFlags.lineFlag {
-			fmt.Printf("%8d", totals.lineCount)
-		}
-		if allFlags.wordFlag {
-			fmt.Printf("%8d", totals.wordCount)
-		}
-		if allFlags.charFlag {
-			fmt.Printf("%8d", totals.charCount)
-		}
+		printAllCounts(allFlags, totals)
 		fmt.Println(" total")
 	}
 
 	os.Exit(osExitCode)
+}
+
+func printAllCounts(allFlags flags, totalCounts totalCounts) {
+	if allFlags.lineFlag {
+		fmt.Printf("%8d", totalCounts.lineCount)
+	}
+	if allFlags.wordFlag {
+		fmt.Printf("%8d", totalCounts.wordCount)
+	}
+	if allFlags.charFlag {
+		fmt.Printf("%8d", totalCounts.charCount)
+	}
 }
 
 func evaluateFile(filePath string, allFlags *flags, totals *totalCounts) (output string, errMsg string, exitCode int) {
@@ -202,15 +206,7 @@ func readFromStdin(allFlags flags) {
 	}
 
 	fmt.Println()
-	if allFlags.lineFlag {
-		fmt.Printf("%8d", totalCounts.lineCount)
-	}
-	if allFlags.wordFlag {
-		fmt.Printf("%8d", totalCounts.wordCount)
-	}
-	if allFlags.charFlag {
-		fmt.Printf("%8d", totalCounts.charCount)
-	}
+	printAllCounts(allFlags, totalCounts)
 	fmt.Println()
 }
 
