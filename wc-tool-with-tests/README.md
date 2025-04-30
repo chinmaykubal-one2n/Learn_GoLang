@@ -27,5 +27,5 @@ Usage
 * As per the expectations program will throw the appropritate error messages.
 * Goroutine is implemented so program can spin up one goroutine per file.
 * Program is tested with over 35 files, it can process the files simultaneously.
-* Except for stdin, entire the file is not getting read, instead files are getting read line by line, word by word and char by char and then calculating them.
+* Except for stdin, entire the file is not getting read, instead files are getting read line by line, word by word and char by char and then calculating the respective linse, words or counts.
 * Progam has been load tested with these files :- https://github.com/ravexina/shakespeare-plays-dataset-scraper/tree/master/shakespeare-db
