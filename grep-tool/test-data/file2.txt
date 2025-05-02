@@ -1,0 +1,7 @@
+Hello Golang.
+This is a simple file !!
+With some text inside it with some numbers 1,2,3,4,5 and some special chars.!@#$%^&*()
+
+Hello Golang.
+This is a simple file !!
+With some text inside it with some numbers 1,2,3,4,5 and some special chars.!@#$%^&*()
