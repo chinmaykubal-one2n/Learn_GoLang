@@ -4,7 +4,7 @@ init:
 	@test -f go.mod || go mod init grep-cli
 
 build:
-	@go build -o mygrep main.go
+	@go build -o mygrep 
 
 test:
 	@go test 
