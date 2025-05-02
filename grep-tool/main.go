@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -13,16 +14,31 @@ func main() {
 		successCode int = 0
 		errorCode   int = 1
 	)
+	flag.Parse()
+	args := flag.Args()
 
-	if len(os.Args) < 2 {
+	if len(args) < 1 {
 		fmt.Fprintf(os.Stderr, "Usage: %s <search_string> <filename>\n", os.Args[0])
 		os.Exit(errorCode)
 	}
 
-	searchString := os.Args[1]
+	searchString := args[0]
 
-	if len(os.Args) == 3 {
-		filename := os.Args[2]
+	if len(args) == 1 {
+		lines, err := grepReader(searchString, os.Stdin)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
+			os.Exit(errorCode)
+		}
+		fmt.Println()
+		fmt.Println()
+		for _, line := range lines {
+			fmt.Printf("%s\n", line)
+		}
+	}
+
+	if len(args) == 2 {
+		filename := args[1]
 		file, err := validateFile(filename)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -39,19 +55,6 @@ func main() {
 
 		for _, matchedLines := range matches {
 			fmt.Println(matchedLines)
-		}
-	}
-
-	if len(os.Args) == 2 {
-		lines, err := grepReader(searchString, os.Stdin)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
-			os.Exit(errorCode)
-		}
-		fmt.Println()
-		fmt.Println()
-		for _, line := range lines {
-			fmt.Printf("%s\n", line)
 		}
 	}
 
