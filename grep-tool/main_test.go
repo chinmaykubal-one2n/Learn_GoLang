@@ -33,18 +33,18 @@ var grepTestCases = []grepTestCase{
 	},
 }
 
-func TestGrepFile(t *testing.T) {
+func TestGrepReader(t *testing.T) {
 	for _, tt := range grepTestCases {
 		reader := strings.NewReader(tt.input)
-		gotMatches, err := grepFile(tt.searchString, reader)
+		gotMatches, err := grepReader(tt.searchString, reader)
 
 		if err != nil {
-			t.Errorf("grepFile() error = %v", err)
+			t.Errorf("grepReader() error = %v", err)
 		}
 
 		for i := range gotMatches {
 			if gotMatches[i] != tt.wantMatches[i] {
-				t.Errorf("grepFile() mismatch at index %d: got %s, want %s", i, gotMatches[i], tt.wantMatches[i])
+				t.Errorf("grepReader() mismatch at index %d: got %s, want %s", i, gotMatches[i], tt.wantMatches[i])
 			}
 		}
 	}

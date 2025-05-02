@@ -14,30 +14,45 @@ func main() {
 		errorCode   int = 1
 	)
 
-	if len(os.Args) != 3 {
+	if len(os.Args) < 2 {
 		fmt.Fprintf(os.Stderr, "Usage: %s <search_string> <filename>\n", os.Args[0])
 		os.Exit(errorCode)
 	}
 
 	searchString := os.Args[1]
-	filename := os.Args[2]
 
-	file, err := validateFile(filename)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(errorCode)
+	if len(os.Args) == 3 {
+		filename := os.Args[2]
+		file, err := validateFile(filename)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(errorCode)
+		}
+		defer file.Close()
+
+		matches, err := grepReader(searchString, file)
+
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s: %s: %v\n", os.Args[0], filename, err)
+			os.Exit(errorCode)
+		}
+
+		for _, matchedLines := range matches {
+			fmt.Println(matchedLines)
+		}
 	}
-	defer file.Close()
 
-	matches, err := grepFile(searchString, file)
-
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s: %s: %v\n", os.Args[0], filename, err)
-		os.Exit(errorCode)
-	}
-
-	for _, matchedLines := range matches {
-		fmt.Println(matchedLines)
+	if len(os.Args) == 2 {
+		lines, err := grepReader(searchString, os.Stdin)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
+			os.Exit(errorCode)
+		}
+		fmt.Println()
+		fmt.Println()
+		for _, line := range lines {
+			fmt.Printf("%s\n", line)
+		}
 	}
 
 	os.Exit(successCode)
@@ -70,7 +85,7 @@ func validateFile(filename string) (*os.File, error) {
 	return file, nil
 }
 
-func grepFile(searchString string, reader io.Reader) ([]string, error) {
+func grepReader(searchString string, reader io.Reader) ([]string, error) {
 	var matches []string
 
 	scanner := bufio.NewScanner(reader)
