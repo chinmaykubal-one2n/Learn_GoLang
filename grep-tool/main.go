@@ -14,6 +14,7 @@ func main() {
 		successCode int = 0
 		errorCode   int = 1
 	)
+
 	flag.Parse()
 	args := flag.Args()
 
