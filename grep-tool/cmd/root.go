@@ -14,6 +14,7 @@ import (
 )
 
 var outFile string
+var caseInsensitive bool
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -72,6 +73,7 @@ func Execute() {
 func init() {
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	rootCmd.Flags().StringVarP(&outFile, "out", "o", "", "Write output to file instead of stdout")
+	rootCmd.Flags().BoolVarP(&caseInsensitive, "i", "i", false, "Ignore case when searching")
 }
 
 func validateFile(filename string) (*os.File, error) {
@@ -105,9 +107,19 @@ func grepReader(searchString string, reader io.Reader) ([]string, error) {
 	var matches []string
 	scanner := bufio.NewScanner(reader)
 
+	if caseInsensitive {
+		searchString = strings.ToLower(searchString)
+	}
+
 	for scanner.Scan() {
 		line := scanner.Text()
-		if strings.Contains(line, searchString) {
+		compareLine := line
+
+		if caseInsensitive {
+			compareLine = strings.ToLower(line)
+		}
+
+		if strings.Contains(compareLine, searchString) {
 			matches = append(matches, line)
 		}
 	}
