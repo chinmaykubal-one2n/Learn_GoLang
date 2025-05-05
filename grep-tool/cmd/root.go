@@ -19,13 +19,8 @@ var outFile string
 var rootCmd = &cobra.Command{
 	Use:   "./mygrep <search_string> <filename> [-o out.txt]",
 	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Args: cobra.MinimumNArgs(1),
+	Long:  ``,
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		searchString := args[0]
 		var reader io.Reader
@@ -51,9 +46,18 @@ to quickly create a Cobra application.`,
 			os.Exit(1)
 		}
 
-		if err := writeOutput(matches, outFile); err != nil {
-			fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
-			os.Exit(1)
+		if outFile == "" {
+			err := writeStdout(matches)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
+				os.Exit(1)
+			}
+		} else {
+			err := writeToFile(outFile, matches)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
+				os.Exit(1)
+			}
 		}
 	},
 }
@@ -116,15 +120,17 @@ func grepReader(searchString string, reader io.Reader) ([]string, error) {
 	return matches, nil
 }
 
-func writeOutput(lines []string, outPath string) error {
-	if outPath == "" {
-		for _, line := range lines {
-			fmt.Println(line)
-		}
-		return nil
+func writeStdout(lines []string) error {
+	for _, line := range lines {
+		fmt.Println(line)
 	}
 
-	if _, err := os.Stat(outPath); err == nil {
+	return nil
+}
+
+func writeToFile(outPath string, lines []string) error {
+	_, err := os.Stat(outPath)
+	if err == nil {
 		return fmt.Errorf("%s already exists", outPath)
 	}
 
@@ -140,5 +146,6 @@ func writeOutput(lines []string, outPath string) error {
 			return err
 		}
 	}
+
 	return nil
 }
