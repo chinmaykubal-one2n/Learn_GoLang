@@ -103,8 +103,8 @@ func validateFile(filename string) (*os.File, error) {
 
 func grepReader(searchString string, reader io.Reader) ([]string, error) {
 	var matches []string
-
 	scanner := bufio.NewScanner(reader)
+
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.Contains(line, searchString) {
