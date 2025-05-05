@@ -1,4 +1,3 @@
-// refacotor the below code all structs should be at first location then their corresponding objects and then functions
 package main
 
 import (
@@ -152,4 +151,18 @@ func TestCountFromStdin(t *testing.T) {
 	if counts != expected {
 		t.Errorf("Expected %v, got %v", expected, counts)
 	}
+}
+
+func TestPrintAllCounts(t *testing.T) {
+	counts := totalCounts{
+		lineCount: 1,
+		wordCount: 2,
+		charCount: 11,
+	}
+	allFlags := flags{
+		lineFlag: true,
+		wordFlag: true,
+		charFlag: true,
+	}
+	printAllCounts(&allFlags, &counts)
 }
