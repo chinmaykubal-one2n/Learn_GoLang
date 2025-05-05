@@ -166,3 +166,35 @@ func TestPrintAllCounts(t *testing.T) {
 	}
 	printAllCounts(&allFlags, &counts)
 }
+
+func TestValidateFile(t *testing.T) {
+	// Case 1: File does not exist
+	_, msg, code := validateFile("nonexistent_file.txt")
+	if code != 1 || !strings.Contains(msg, "No such file or directory") {
+		t.Errorf("Expected file-not-found error, got: msg=%q, code=%d", msg, code)
+	}
+
+	// Case 2: File is a directory
+	dir := t.TempDir()
+	_, msg, code = validateFile(dir)
+	if code != 1 || !strings.Contains(msg, "Is a directory") {
+		t.Errorf("Expected is-a-directory error, got: msg=%q, code=%d", msg, code)
+	}
+
+	// Case 3: Permission denied
+	tmpFile, err := os.CreateTemp("", "testfile")
+	if err != nil {
+		t.Fatalf("Failed to create temp file: %v", err)
+	}
+	tmpFilePath := tmpFile.Name()
+	tmpFile.Close()
+	os.Chmod(tmpFilePath, 000) // remove all permissions
+
+	defer os.Chmod(tmpFilePath, 0600) // restore so it can be deleted
+	defer os.Remove(tmpFilePath)
+
+	_, msg, code = validateFile(tmpFilePath)
+	if code != 1 || !strings.Contains(msg, "Permission denied") {
+		t.Errorf("Expected permission-denied error, got: msg=%q, code=%d", msg, code)
+	}
+}
