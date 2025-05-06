@@ -19,9 +19,11 @@ var caseInsensitive bool
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "./mygrep <search_string> <filename> [-o out.txt]",
-	Short: "A brief description of your application",
-	Long:  ``,
-	Args:  cobra.MinimumNArgs(1),
+	Short: "A grep-like command-line tool written in Go",
+	Long: `mygrep allows searching for text in files or directories, 
+	with options like case-insensitive search and output redirection.`,
+	Args: cobra.MinimumNArgs(1),
+
 	Run: func(cmd *cobra.Command, args []string) {
 		searchString := args[0]
 		var reader io.Reader
