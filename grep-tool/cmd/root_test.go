@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"os"
 	"strings"
 	"testing"
 )
@@ -51,10 +52,41 @@ func TestGrepReader(t *testing.T) {
 }
 
 // do we even need the below test?
-func TestWriteStdout(t *testing.T) {
+// func TestWriteStdout(t *testing.T) {
+// 	var lines []string
+// 	for _, grepTestCase := range grepTestCases {
+// 		lines = append(lines, grepTestCase.input)
+// 	}
+// 	writeStdout(lines)
+// }
+
+func TestWriteToFile(t *testing.T) {
 	var lines []string
+	var expectedContent string
+
 	for _, grepTestCase := range grepTestCases {
 		lines = append(lines, grepTestCase.input)
 	}
-	writeStdout(lines)
+
+	for _, line := range lines {
+		expectedContent += string(line) + "\n"
+	}
+
+	err := writeToFile("test_output.txt", lines)
+	if err != nil {
+		t.Errorf("writeToFile() error = %v", err)
+	}
+
+	fileContent, err := os.ReadFile("test_output.txt")
+	if err != nil {
+		t.Errorf("Failed to read file: %v", err)
+	}
+	if string(fileContent) != expectedContent {
+		t.Errorf("File content mismatch: got %s, want %s", string(fileContent), expectedContent)
+	}
+
+	err = os.Remove("test_output.txt")
+	if err != nil {
+		t.Errorf("Failed to remove test file: %v", err)
+	}
 }
