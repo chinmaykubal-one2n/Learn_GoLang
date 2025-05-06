@@ -174,6 +174,34 @@ func stdOutForRecursiveFiles(lines []string, filename string) {
 	}
 }
 
+func recursiveSearch(searchString, root string) {
+	filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
+			return nil // don't stop, just skip this file/folder
+		}
+
+		if d.IsDir() {
+			return nil
+		}
+
+		file, err := validateFile(path)
+		if err != nil {
+			return nil
+		}
+		defer file.Close()
+
+		matches, err := grepReader(searchString, file)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
+			return nil
+		}
+
+		stdOutForRecursiveFiles(matches, path)
+		return nil
+	})
+}
+
 // func recursiveSearch(searchString string, path string) {
 // 	pathDetails, err := os.Stat(path)
 
@@ -222,31 +250,3 @@ func stdOutForRecursiveFiles(lines []string, filename string) {
 // 		stdOutForRecursiveFiles(matches, path)
 // 	}
 // }
-
-func recursiveSearch(searchString, root string) {
-	filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
-			return nil // don't stop, just skip this file/folder
-		}
-
-		if d.IsDir() {
-			return nil
-		}
-
-		file, err := validateFile(path)
-		if err != nil {
-			return nil
-		}
-		defer file.Close()
-
-		matches, err := grepReader(searchString, file)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
-			return nil
-		}
-
-		stdOutForRecursiveFiles(matches, path)
-		return nil
-	})
-}
