@@ -201,5 +201,18 @@ func recursiveSearch(searchString string, path string) {
 				stdOutForRecursiveFiles(matches, filePath)
 			}
 		}
+	} else {
+		supportedFile, err := validateFile(path)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
+			return
+		}
+		defer supportedFile.Close()
+		matches, err := grepReader(searchString, supportedFile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
+			return
+		}
+		stdOutForRecursiveFiles(matches, path)
 	}
 }
