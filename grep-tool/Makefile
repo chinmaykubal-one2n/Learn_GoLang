@@ -1,4 +1,4 @@
-.PHONY: init build test
+.PHONY: init build test coverage
 
 init:
 	@test -f go.mod ||  go mod init grep-cli  
@@ -8,3 +8,7 @@ build:
 
 test:
 	@go test ./cmd/
+
+coverage:
+	@go test -coverprofile=coverage.out ./cmd/
+	@go tool cover -func=coverage.out  
