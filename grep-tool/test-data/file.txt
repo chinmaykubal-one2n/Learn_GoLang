@@ -1,3 +1,10 @@
-Hello Golang.
-This is a simple file !!
-With some text inside it with some numbers 1,2,3,4,5 and some special chars.!@#$%^&*()
+Line1
+Line2
+Line3
+Line4
+Hello
+Line6
+Line7
+Line8
+Line9
+Line10
