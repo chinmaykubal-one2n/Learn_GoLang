@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -15,6 +16,7 @@ import (
 
 var outFile string
 var caseInsensitive bool
+var recursive bool
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -27,6 +29,12 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		searchString := args[0]
 		var reader io.Reader
+
+		if recursive {
+			filename := args[1]
+			recursiveSearch(searchString, filename)
+			return
+		}
 
 		switch len(args) {
 		case 1:
@@ -72,6 +80,7 @@ func init() {
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	rootCmd.Flags().StringVarP(&outFile, "out", "o", "", "Write output to file instead of stdout")
 	rootCmd.Flags().BoolVarP(&caseInsensitive, "i", "i", false, "Ignore case when searching")
+	rootCmd.Flags().BoolVarP(&recursive, "r", "r", false, "Search recursively in directories")
 }
 
 func validateFile(filename string) (*os.File, error) {
@@ -151,4 +160,46 @@ func writeToFile(outPath string, lines []string) error {
 	}
 
 	return nil
+}
+
+func stdOutForRecursiveFiles(lines []string, filename string) {
+	for _, line := range lines {
+		fmt.Printf("%s:%s\n", filename, line)
+	}
+}
+
+func recursiveSearch(searchString string, path string) {
+	pathDetails, err := os.Stat(path)
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
+		return
+	}
+
+	if pathDetails.IsDir() {
+		files, err := os.ReadDir(path)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
+			return
+		}
+
+		for _, file := range files {
+			if file.IsDir() {
+				recursiveSearch(searchString, filepath.Join(path, file.Name()))
+			} else {
+				filePath := filepath.Join(path, file.Name())
+				supportedFile, err := validateFile(filePath)
+				if err != nil {
+					continue
+				}
+				defer supportedFile.Close()
+				matches, err := grepReader(searchString, supportedFile)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
+					continue
+				}
+				stdOutForRecursiveFiles(matches, filePath)
+			}
+		}
+	}
 }
