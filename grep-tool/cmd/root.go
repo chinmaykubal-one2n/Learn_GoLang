@@ -36,11 +36,11 @@ var rootCmd = &cobra.Command{
 			return
 		}
 
-		switch len(args) {
-		case 1:
+		if len(args) == 1 {
 			reader = os.Stdin
+		}
 
-		case 2:
+		if len(args) == 2 {
 			filename := args[1]
 			file, err := validateFile(filename)
 			if err != nil {
