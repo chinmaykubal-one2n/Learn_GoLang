@@ -49,3 +49,12 @@ func TestGrepReader(t *testing.T) {
 		}
 	}
 }
+
+// do we even need the below test?
+func TestWriteStdout(t *testing.T) {
+	var lines []string
+	for _, grepTestCase := range grepTestCases {
+		lines = append(lines, grepTestCase.input)
+	}
+	writeStdout(lines)
+}
