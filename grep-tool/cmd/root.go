@@ -7,6 +7,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -173,51 +174,79 @@ func stdOutForRecursiveFiles(lines []string, filename string) {
 	}
 }
 
-func recursiveSearch(searchString string, path string) {
-	pathDetails, err := os.Stat(path)
+// func recursiveSearch(searchString string, path string) {
+// 	pathDetails, err := os.Stat(path)
 
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
-		return
-	}
+// 	if err != nil {
+// 		fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
+// 		return
+// 	}
 
-	if pathDetails.IsDir() {
-		files, err := os.ReadDir(path)
+// 	if pathDetails.IsDir() {
+// 		files, err := os.ReadDir(path)
+// 		if err != nil {
+// 			fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
+// 			return
+// 		}
+
+// 		for _, file := range files {
+// 			if file.IsDir() {
+// 				recursiveSearch(searchString, filepath.Join(path, file.Name()))
+// 			} else {
+// 				filePath := filepath.Join(path, file.Name())
+// 				supportedFile, err := validateFile(filePath)
+// 				if err != nil {
+// 					continue
+// 				}
+// 				defer supportedFile.Close()
+// 				matches, err := grepReader(searchString, supportedFile)
+// 				if err != nil {
+// 					fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
+// 					continue
+// 				}
+// 				stdOutForRecursiveFiles(matches, filePath)
+// 			}
+// 		}
+// 	} else {
+// 		supportedFile, err := validateFile(path)
+// 		if err != nil {
+// 			fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
+// 			return
+// 		}
+// 		defer supportedFile.Close()
+// 		matches, err := grepReader(searchString, supportedFile)
+// 		if err != nil {
+// 			fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
+// 			return
+// 		}
+// 		stdOutForRecursiveFiles(matches, path)
+// 	}
+// }
+
+func recursiveSearch(searchString, root string) {
+	filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
-			return
+			return nil // don't stop, just skip this file/folder
 		}
 
-		for _, file := range files {
-			if file.IsDir() {
-				recursiveSearch(searchString, filepath.Join(path, file.Name()))
-			} else {
-				filePath := filepath.Join(path, file.Name())
-				supportedFile, err := validateFile(filePath)
-				if err != nil {
-					continue
-				}
-				defer supportedFile.Close()
-				matches, err := grepReader(searchString, supportedFile)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
-					continue
-				}
-				stdOutForRecursiveFiles(matches, filePath)
-			}
+		if d.IsDir() {
+			return nil
 		}
-	} else {
-		supportedFile, err := validateFile(path)
+
+		file, err := validateFile(path)
+		if err != nil {
+			return nil
+		}
+		defer file.Close()
+
+		matches, err := grepReader(searchString, file)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
-			return
+			return nil
 		}
-		defer supportedFile.Close()
-		matches, err := grepReader(searchString, supportedFile)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
-			return
-		}
+
 		stdOutForRecursiveFiles(matches, path)
-	}
+		return nil
+	})
 }
