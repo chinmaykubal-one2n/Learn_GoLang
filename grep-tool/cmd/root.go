@@ -30,7 +30,7 @@ var rootCmd = &cobra.Command{
 		searchString := args[0]
 		var reader io.Reader
 
-		if recursive {
+		if recursive && len(args) != 1 {
 			filename := args[1]
 			recursiveSearch(searchString, filename)
 			return
