@@ -84,14 +84,9 @@ func validateFile(filename string) (*os.File, error) {
 		if os.IsNotExist(err) {
 			return nil, fmt.Errorf("%s: %s: open: No such file or directory", os.Args[0], filename)
 		}
-		return nil, fmt.Errorf("%s: %s: %v", os.Args[0], filename, err)
 	}
 
-	info, err := file.Stat()
-	if err != nil {
-		file.Close()
-		return nil, fmt.Errorf("%s: %s: %v", os.Args[0], filename, err)
-	}
+	info, _ := file.Stat()
 
 	if info.IsDir() {
 		file.Close()
