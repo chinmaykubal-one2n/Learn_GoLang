@@ -90,3 +90,53 @@ func TestWriteToFile(t *testing.T) {
 		t.Errorf("Failed to remove test file: %v", err)
 	}
 }
+
+func TestValidateFile(t *testing.T) {
+	file, err := os.Create("test.txt")
+
+	if err != nil {
+		t.Errorf("Failed to create test file: %v", err)
+	}
+	defer file.Close()
+	defer os.Remove("test.txt")
+
+	// Test valid file
+	properFile, err := validateFile(file.Name())
+	if err != nil {
+		t.Errorf("validateFile() error = %v", err)
+	}
+	if properFile.Name() != file.Name() {
+		t.Errorf("validateFile() got = %v, want %v", properFile.Name(), file.Name())
+	}
+
+	// Test non-existent file
+	_, nonExistentErr := validateFile("nonexistent.txt")
+	if nonExistentErr == nil || !strings.Contains(nonExistentErr.Error(), "open: No such file or directory") {
+		t.Errorf("expected 'No such file' error, got %v", nonExistentErr)
+	}
+
+	// Test directory
+	err = os.Mkdir("testdir", 0755)
+	if err != nil {
+		t.Errorf("Failed to create test directory: %v", err)
+	}
+	defer os.Remove("testdir")
+	_, dirErr := validateFile("testdir")
+	if dirErr == nil || !strings.Contains(dirErr.Error(), "read: Is a directory") {
+		t.Errorf("expected directory error, got %v", dirErr)
+	}
+
+	// Test permission denied
+	privateFile, err := os.Create("private.txt")
+	if err != nil {
+		t.Errorf("Failed to create private file: %v", err)
+	}
+	defer os.Chmod(privateFile.Name(), 0600)
+	defer os.Remove(privateFile.Name())
+	os.Chmod(privateFile.Name(), 000)
+
+	_, permissionErr := validateFile(privateFile.Name())
+	if permissionErr == nil || !strings.Contains(permissionErr.Error(), "Permission denied") {
+		t.Errorf("expected directory error, got %v", permissionErr)
+	}
+}
