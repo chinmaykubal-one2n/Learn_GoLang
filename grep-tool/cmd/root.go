@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/spf13/cobra"
 )
@@ -214,6 +215,9 @@ func stdOutForRecursiveFiles(lines []string, filename string) {
 }
 
 func recursiveSearch(searchString, root string) {
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+
 	filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
@@ -224,19 +228,31 @@ func recursiveSearch(searchString, root string) {
 			return nil
 		}
 
-		file, err := validateFile(path)
-		if err != nil {
-			return nil
-		}
-		defer file.Close()
+		wg.Add(1)
+		go func(path string) {
+			defer wg.Done()
 
-		matches, err := grepReader(searchString, file)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
-			return nil
-		}
+			file, err := validateFile(path)
+			if err != nil {
+				return
+			}
+			defer file.Close()
 
-		stdOutForRecursiveFiles(matches, path)
+			matches, err := grepReader(searchString, file)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
+				return
+			}
+
+			if len(matches) > 0 {
+				mu.Lock()
+				stdOutForRecursiveFiles(matches, path)
+				mu.Unlock()
+			}
+		}(path)
+
 		return nil
 	})
+
+	wg.Wait()
 }
