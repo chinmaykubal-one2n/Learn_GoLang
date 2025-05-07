@@ -166,6 +166,7 @@ func grepReader(searchString string, reader io.Reader) ([]string, error) {
 			beforeBuffer = append(beforeBuffer, line)
 		}
 	}
+
 	err := scanner.Err()
 	if err != nil {
 		return nil, err
