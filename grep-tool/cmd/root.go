@@ -10,6 +10,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -18,6 +19,8 @@ import (
 var outFile string
 var caseInsensitive bool
 var recursive bool
+var after, before int
+var countOnly bool
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -87,6 +90,10 @@ func init() {
 	rootCmd.Flags().StringVarP(&outFile, "out", "o", "", "Write output to file instead of stdout")
 	rootCmd.Flags().BoolVarP(&caseInsensitive, "i", "i", false, "Ignore case when searching")
 	rootCmd.Flags().BoolVarP(&recursive, "r", "r", false, "Search recursively in directories")
+	rootCmd.Flags().IntVarP(&after, "after", "A", 0, "Print n lines after match")
+	rootCmd.Flags().IntVarP(&before, "before", "B", 0, "Print n lines before match")
+	rootCmd.Flags().BoolVarP(&countOnly, "count", "c", false, "Only print count of matches")
+
 }
 
 func validateFile(filename string) (*os.File, error) {
@@ -113,28 +120,60 @@ func validateFile(filename string) (*os.File, error) {
 
 func grepReader(searchString string, reader io.Reader) ([]string, error) {
 	var matches []string
+	var count int
+
 	scanner := bufio.NewScanner(reader)
 
 	if caseInsensitive {
 		searchString = strings.ToLower(searchString)
 	}
 
+	beforeBuffer := make([]string, 0, before)
+	afterRemaining := 0
+
 	for scanner.Scan() {
 		line := scanner.Text()
 		compareLine := line
-
 		if caseInsensitive {
 			compareLine = strings.ToLower(line)
 		}
 
-		if strings.Contains(compareLine, searchString) {
+		match := strings.Contains(compareLine, searchString)
+
+		if match {
+			count++
+			if countOnly {
+				continue
+			}
+
+			for _, b := range beforeBuffer {
+				matches = append(matches, b)
+			}
+
+			beforeBuffer = beforeBuffer[:0]
+
 			matches = append(matches, line)
+
+			afterRemaining = after
+
+		} else if afterRemaining > 0 {
+			matches = append(matches, line)
+			afterRemaining--
+
+		} else if before > 0 {
+			if len(beforeBuffer) == before {
+				beforeBuffer = beforeBuffer[1:]
+			}
+			beforeBuffer = append(beforeBuffer, line)
 		}
 	}
-
 	err := scanner.Err()
 	if err != nil {
 		return nil, err
+	}
+
+	if countOnly {
+		return []string{strconv.Itoa(count)}, nil
 	}
 
 	return matches, nil
@@ -201,6 +240,35 @@ func recursiveSearch(searchString, root string) {
 		return nil
 	})
 }
+
+// func grepReader(searchString string, reader io.Reader) ([]string, error) {
+// 	var matches []string
+// 	scanner := bufio.NewScanner(reader)
+
+// 	if caseInsensitive {
+// 		searchString = strings.ToLower(searchString)
+// 	}
+
+// 	for scanner.Scan() {
+// 		line := scanner.Text()
+// 		compareLine := line
+
+// 		if caseInsensitive {
+// 			compareLine = strings.ToLower(line)
+// 		}
+
+// 		if strings.Contains(compareLine, searchString) {
+// 			matches = append(matches, line)
+// 		}
+// 	}
+
+// 	err := scanner.Err()
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	return matches, nil
+// }
 
 // func recursiveSearch(searchString string, path string) {
 // 	pathDetails, err := os.Stat(path)
