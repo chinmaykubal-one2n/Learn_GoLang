@@ -208,7 +208,7 @@ func writeToFile(outPath string, lines []string) error {
 	return nil
 }
 
-func stdOutForRecursiveFiles(lines []string, filename string) {
+func WriteToStdOutForRecursiveFiles(lines []string, filename string) {
 	for _, line := range lines {
 		fmt.Printf("%s:%s\n", filename, line)
 	}
@@ -246,7 +246,7 @@ func recursiveSearch(searchString, root string) {
 
 			if len(matches) > 0 {
 				mu.Lock()
-				stdOutForRecursiveFiles(matches, path)
+				WriteToStdOutForRecursiveFiles(matches, path)
 				mu.Unlock()
 			}
 		}(path)
