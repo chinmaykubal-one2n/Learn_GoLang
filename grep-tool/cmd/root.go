@@ -93,7 +93,6 @@ func init() {
 	rootCmd.Flags().IntVarP(&after, "after", "A", 0, "Print n lines after match")
 	rootCmd.Flags().IntVarP(&before, "before", "B", 0, "Print n lines before match")
 	rootCmd.Flags().BoolVarP(&countOnly, "count", "c", false, "Only print count of matches")
-
 }
 
 func validateFile(filename string) (*os.File, error) {
