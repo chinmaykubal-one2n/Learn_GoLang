@@ -181,3 +181,12 @@ func TestValidateFile(t *testing.T) {
 		t.Errorf("expected directory error, got %v", permissionErr)
 	}
 }
+
+func TestRecursiveSearch(t *testing.T) {
+	localDir := "../test-data"
+	searchString := "Hello"
+
+	recursiveSearch(searchString, localDir)
+}
+
+// need to work on the above test case.
