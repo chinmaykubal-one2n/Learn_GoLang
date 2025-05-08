@@ -50,6 +50,30 @@ var rootCmd = &cobra.Command{
 			reader = os.Stdin
 		}
 
+		if len(args) > 2 {
+			for _, arg := range args {
+				if arg == searchString {
+					continue
+				}
+				filename := arg
+				file, err := validateFile(filename)
+				if err != nil {
+					fmt.Fprintln(os.Stderr, err)
+					os.Exit(1)
+				}
+				defer file.Close()
+				reader = file
+
+				matches, err := grepReader(searchString, reader)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
+					os.Exit(1)
+				}
+				writeStdout(matches)
+			}
+			return
+		}
+
 		if len(args) == 2 {
 			filename := args[1]
 			file, err := validateFile(filename)
