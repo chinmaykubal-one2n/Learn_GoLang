@@ -220,7 +220,6 @@ func recursiveSearch(searchString, root string) {
 
 	filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
 			return nil
 		}
 
