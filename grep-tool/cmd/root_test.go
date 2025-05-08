@@ -117,10 +117,7 @@ func TestWriteToFile(t *testing.T) {
 		expectedContent += string(line) + "\n"
 	}
 
-	err := writeToFile("test_output.txt", lines)
-	if err != nil {
-		t.Errorf("writeToFile() error = %v", err)
-	}
+	writeToFile("test_output.txt", lines)
 
 	fileContent, err := os.ReadFile("test_output.txt")
 	if err != nil {
@@ -130,9 +127,21 @@ func TestWriteToFile(t *testing.T) {
 		t.Errorf("File content mismatch: got %s, want %s", string(fileContent), expectedContent)
 	}
 
+	// checking for file exsists error
+	fileExsistsErr := writeToFile("test_output.txt", lines)
+	if fileExsistsErr == nil || !strings.Contains(fileExsistsErr.Error(), "already exists") {
+		t.Errorf("Expected file exists error, got: %v", fileExsistsErr)
+	}
+
 	err = os.Remove("test_output.txt")
 	if err != nil {
 		t.Errorf("Failed to remove test file: %v", err)
+	}
+
+	// checking for invalid file path
+	invalidFilePathErr := writeToFile("/invalid/path/to/file.txt", []string{"data"})
+	if invalidFilePathErr == nil {
+		t.Errorf("Expected error on invalid path, got %v", invalidFilePathErr)
 	}
 }
 
