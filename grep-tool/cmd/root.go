@@ -46,10 +46,6 @@ var rootCmd = &cobra.Command{
 			return
 		}
 
-		if len(args) == 1 {
-			reader = os.Stdin
-		}
-
 		if len(args) > 2 {
 			for _, arg := range args {
 				if arg == searchString {
@@ -72,6 +68,10 @@ var rootCmd = &cobra.Command{
 				writeStdout(matches)
 			}
 			return
+		}
+
+		if len(args) == 1 {
+			reader = os.Stdin
 		}
 
 		if len(args) == 2 {
