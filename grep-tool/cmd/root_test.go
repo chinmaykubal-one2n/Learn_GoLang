@@ -82,11 +82,7 @@ func TestGrepReader(t *testing.T) {
 		caseInsensitive = grepTestCase.caseInsensitive
 
 		reader := strings.NewReader(grepTestCase.input)
-		gotMatches, err := grepReader(grepTestCase.searchString, reader)
-
-		if err != nil {
-			t.Errorf("grepReader() error = %v", err)
-		}
+		gotMatches, _ := grepReader(grepTestCase.searchString, reader)
 
 		for i := range gotMatches {
 			if gotMatches[i] != grepTestCase.wantMatches[i] {
@@ -95,15 +91,6 @@ func TestGrepReader(t *testing.T) {
 		}
 	}
 }
-
-// do we even need the below test?
-// func TestWriteStdout(t *testing.T) {
-// 	var lines []string
-// 	for _, grepTestCase := range grepTestCases {
-// 		lines = append(lines, grepTestCase.input)
-// 	}
-// 	writeStdout(lines)
-// }
 
 func TestWriteToFile(t *testing.T) {
 	var lines []string
