@@ -7,10 +7,14 @@ import (
 )
 
 type grepTestCase struct {
-	name         string
-	searchString string
-	input        string
-	wantMatches  []string
+	name            string
+	searchString    string
+	input           string
+	wantMatches     []string
+	caseInsensitive bool
+	before          int
+	after           int
+	conuntOnly      bool
 }
 
 var grepTestCases = []grepTestCase{
@@ -32,20 +36,61 @@ var grepTestCases = []grepTestCase{
 		input:        "cat is here\ncat again\nno match\nwildcat\n",
 		wantMatches:  []string{"cat is here", "cat again", "wildcat"},
 	},
+	{
+		name:            "Case insensitive match",
+		searchString:    "hello",
+		input:           "line1\nHello World!\nline3\n",
+		wantMatches:     []string{"Hello World!"},
+		caseInsensitive: true,
+	},
+	{
+		name:         "Before context",
+		searchString: "cat",
+		input:        "line1\nline2\nline3\ncat is here\nline4\n",
+		wantMatches:  []string{"line2", "line3", "cat is here"},
+		before:       2,
+	},
+	{
+		name:         "After context",
+		searchString: "cat",
+		input:        "line1\nline2\nline3\ncat is here\nline4\nline5\n",
+		wantMatches:  []string{"cat is here", "line4", "line5"},
+		after:        2,
+	},
+	{
+		name:         "Before and after context",
+		searchString: "cat",
+		input:        "line1\nline2\nline3\ncat is here\nline4\nline5\n",
+		wantMatches:  []string{"line2", "line3", "cat is here", "line4", "line5"},
+		before:       2,
+		after:        2,
+	},
+	{
+		name:         "Count only",
+		searchString: "cat",
+		input:        "line1\nline2\ncat is here\ncat again\nno match\nwildcat\n",
+		wantMatches:  []string{"3"},
+		conuntOnly:   true,
+	},
 }
 
 func TestGrepReader(t *testing.T) {
-	for _, tt := range grepTestCases {
-		reader := strings.NewReader(tt.input)
-		gotMatches, err := grepReader(tt.searchString, reader)
+	for _, grepTestCase := range grepTestCases {
+		countOnly = grepTestCase.conuntOnly
+		before = grepTestCase.before
+		after = grepTestCase.after
+		caseInsensitive = grepTestCase.caseInsensitive
+
+		reader := strings.NewReader(grepTestCase.input)
+		gotMatches, err := grepReader(grepTestCase.searchString, reader)
 
 		if err != nil {
 			t.Errorf("grepReader() error = %v", err)
 		}
 
 		for i := range gotMatches {
-			if gotMatches[i] != tt.wantMatches[i] {
-				t.Errorf("grepReader() mismatch at index %d: got %s, want %s", i, gotMatches[i], tt.wantMatches[i])
+			if gotMatches[i] != grepTestCase.wantMatches[i] {
+				t.Errorf("grepReader() mismatch at index %d: got %s, want %s", i, gotMatches[i], grepTestCase.wantMatches[i])
 			}
 		}
 	}
