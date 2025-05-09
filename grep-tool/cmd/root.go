@@ -65,7 +65,7 @@ var rootCmd = &cobra.Command{
 					fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
 					os.Exit(1)
 				}
-				writeStdout(matches)
+				writeStdout(matches, os.Stdout)
 			}
 			return
 		}
@@ -92,7 +92,7 @@ var rootCmd = &cobra.Command{
 		}
 
 		if outFile == "" {
-			writeStdout(matches)
+			writeStdout(matches, os.Stdout)
 		} else {
 			err := writeToFile(outFile, matches)
 			if err != nil {
@@ -204,9 +204,10 @@ func grepReader(searchString string, reader io.Reader) ([]string, error) {
 	return matches, nil
 }
 
-func writeStdout(lines []string) {
+func writeStdout(lines []string, out io.Writer) {
 	for _, line := range lines {
-		fmt.Println(line)
+		// fmt.Println(line)
+		fmt.Fprintf(out, "%s\n", line)
 	}
 }
 
