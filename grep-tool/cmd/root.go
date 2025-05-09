@@ -42,7 +42,7 @@ var rootCmd = &cobra.Command{
 			} else {
 				filename = args[1]
 			}
-			recursiveSearch(searchString, filename)
+			recursiveSearch(searchString, filename, os.Stdout)
 			return
 		}
 
@@ -232,13 +232,13 @@ func writeToFile(outPath string, lines []string) error {
 	return nil
 }
 
-func WriteToStdOutForRecursiveFiles(lines []string, filename string) {
+func WriteToStdOutForRecursiveFiles(w io.Writer, lines []string, filename string) {
 	for _, line := range lines {
-		fmt.Printf("%s:%s\n", filename, line)
+		fmt.Fprintf(w, "%s:%s\n", filename, line)
 	}
 }
 
-func recursiveSearch(searchString, root string) {
+func recursiveSearch(searchString, root string, out io.Writer) {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 
@@ -269,7 +269,7 @@ func recursiveSearch(searchString, root string) {
 
 			if len(matches) > 0 {
 				mu.Lock()
-				WriteToStdOutForRecursiveFiles(matches, path)
+				WriteToStdOutForRecursiveFiles(out, matches, path)
 				mu.Unlock()
 			}
 		}(path)
