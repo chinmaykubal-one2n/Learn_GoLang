@@ -1,7 +1,10 @@
 package cmd
 
 import (
+	"bytes"
+	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -183,10 +186,38 @@ func TestValidateFile(t *testing.T) {
 }
 
 func TestRecursiveSearch(t *testing.T) {
-	localDir := "../test-data"
-	searchString := "Hello"
+	countOnly = false
+	before = 2
+	after = 2
+	caseInsensitive = true
 
-	recursiveSearch(searchString, localDir)
+	tmp := t.TempDir()
+
+	dir1 := filepath.Join(tmp, "dir1")
+	dir2 := filepath.Join(tmp, "dir2")
+	dir3 := filepath.Join(tmp, "dir3")
+	os.MkdirAll(dir1, 0755)
+	os.MkdirAll(dir2, 0755)
+	os.MkdirAll(dir3, 0755)
+
+	file1 := filepath.Join(dir1, "file.txt")
+	os.WriteFile(file1, []byte("Hello from dir1"), 0644)
+
+	file2 := filepath.Join(dir2, "file.txt")
+	os.WriteFile(file2, []byte("Hello from dir2"), 0644)
+
+	var buf bytes.Buffer
+	recursiveSearch("hello", tmp, &buf)
+	got := buf.String()
+
+	want1 := fmt.Sprintf("%s:Hello from dir1\n", file1)
+	want2 := fmt.Sprintf("%s:Hello from dir2\n", file2)
+
+	if !strings.Contains(got, want1) {
+		t.Errorf("Expected output %s not found.\nGot:\n%s", want1, got)
+	}
+
+	if !strings.Contains(got, want2) {
+		t.Errorf("Expected output %s not found.\nGot:\n%s", want2, got)
+	}
 }
-
-// need to work on the above test case.
