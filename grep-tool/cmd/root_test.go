@@ -221,3 +221,18 @@ func TestRecursiveSearch(t *testing.T) {
 		t.Errorf("Expected output %s not found.\nGot:\n%s", want2, got)
 	}
 }
+
+func TestWriteStdout(t *testing.T) {
+	lines := []string{"Hello", "World"}
+	var buf bytes.Buffer
+
+	writeStdout(lines, &buf)
+
+	got := buf.String()
+	want := "Hello\nWorld\n"
+
+	if got != want {
+		t.Errorf("Expected:\n%s\nGot:\n%s", want, got)
+	}
+
+}
