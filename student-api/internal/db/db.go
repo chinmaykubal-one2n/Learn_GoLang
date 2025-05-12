@@ -32,5 +32,5 @@ func Connect() {
 	}
 
 	DB = db
-	fmt.Println("Connected to PostgreSQL and migrated Student model")
+	log.Println("Connected to PostgreSQL database")
 }
