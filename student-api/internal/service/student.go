@@ -2,50 +2,50 @@ package service
 
 import (
 	"errors"
+	"student-api/internal/db"
 	"student-api/internal/model"
 
 	"github.com/google/uuid"
 )
 
-var students = map[string]model.Student{}
-
 func ListStudents() []model.Student {
-	result := []model.Student{}
-	for _, s := range students {
-		result = append(result, s)
-	}
-	return result
+	var students []model.Student
+	db.DB.Find(&students)
+	return students
 }
 
 func GetStudent(id string) (model.Student, error) {
-	s, ok := students[id]
-	if !ok {
+	var student model.Student
+	result := db.DB.First(&student, "id = ?", id)
+	if result.Error != nil {
 		return model.Student{}, errors.New("student not found")
 	}
-	return s, nil
+	return student, nil
 }
 
 func CreateStudent(s model.Student) model.Student {
 	s.ID = uuid.New().String()
-	students[s.ID] = s
+	db.DB.Create(&s)
 	return s
 }
 
 func UpdateStudent(id string, updated model.Student) (model.Student, error) {
-	_, exists := students[id]
-	if !exists {
+	var student model.Student
+	if err := db.DB.First(&student, "id = ?", id).Error; err != nil {
 		return model.Student{}, errors.New("student not found")
 	}
-	updated.ID = id
-	students[id] = updated
-	return updated, nil
+
+	student.Name = updated.Name
+	student.Age = updated.Age
+	student.Email = updated.Email
+	db.DB.Save(&student)
+	return student, nil
 }
 
 func DeleteStudent(id string) error {
-	_, exists := students[id]
-	if !exists {
+	result := db.DB.Delete(&model.Student{}, "id = ?", id)
+	if result.RowsAffected == 0 {
 		return errors.New("student not found")
 	}
-	delete(students, id)
 	return nil
 }
