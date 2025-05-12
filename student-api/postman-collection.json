@@ -1,0 +1,93 @@
+{
+    "info": {
+      "name": "Student API Go-Gin",
+      "_postman_id": "abc12345-def6-7890-gh12-ijkl34567890",
+      "description": "Postman collection for testing the Gin-based Student API",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+      {
+        "name": "Create Student",
+        "request": {
+          "method": "POST",
+          "header": [
+            { "key": "Content-Type", "value": "application/json" }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"name\": \"Alice\",\n  \"age\": 22,\n  \"email\": \"alice@example.com\"\n}"
+          },
+          "url": {
+            "raw": "http://localhost:8080/students",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "8080",
+            "path": ["students"]
+          }
+        }
+      },
+      {
+        "name": "List Students",
+        "request": {
+          "method": "GET",
+          "header": [],
+          "url": {
+            "raw": "http://localhost:8080/students",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "8080",
+            "path": ["students"]
+          }
+        }
+      },
+      {
+        "name": "Get Student",
+        "request": {
+          "method": "GET",
+          "header": [],
+          "url": {
+            "raw": "http://localhost:8080/students/{{student_id}}",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "8080",
+            "path": ["students", "{{student_id}}"]
+          }
+        }
+      },
+      {
+        "name": "Update Student",
+        "request": {
+          "method": "PUT",
+          "header": [
+            { "key": "Content-Type", "value": "application/json" }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"name\": \"Alice Updated\",\n  \"age\": 23,\n  \"email\": \"alice.updated@example.com\"\n}"
+          },
+          "url": {
+            "raw": "http://localhost:8080/students/{{student_id}}",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "8080",
+            "path": ["students", "{{student_id}}"]
+          }
+        }
+      },
+      {
+        "name": "Delete Student",
+        "request": {
+          "method": "DELETE",
+          "header": [],
+          "url": {
+            "raw": "http://localhost:8080/students/{{student_id}}",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "8080",
+            "path": ["students", "{{student_id}}"]
+          }
+        }
+      }
+    ]
+  }
+  
