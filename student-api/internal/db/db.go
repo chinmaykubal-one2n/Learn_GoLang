@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"student-api/internal/model"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -26,10 +25,10 @@ func Connect() {
 		log.Fatal("Failed to connect to DB: ", err)
 	}
 
-	// Auto-migrate the schema
-	if err := db.AutoMigrate(&model.Student{}); err != nil {
-		log.Fatal("Failed to auto-migrate Student model: ", err)
-	}
+	// // Auto-migrate the schema
+	// if err := db.AutoMigrate(&model.Student{}); err != nil {
+	// 	log.Fatal("Failed to auto-migrate Student model: ", err)
+	// }
 
 	DB = db
 	log.Println("Connected to PostgreSQL database")

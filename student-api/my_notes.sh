@@ -28,3 +28,18 @@ exit
 # DB_PASSWORD=ocYHVBzBVQYoQg50iAIE
 # DB_NAME=studentdb
 # DB_PORT=5432
+
+For DB migration 
+1.(https://github.com/golang-migrate/migrate/tree/master/cmd/migrate#linux-deb-package) (install package)
+2.migrate -version
+3.https://github.com/golang-migrate/migrate/blob/master/GETTING_STARTED.md (Create migrations)
+4.
+migrate-create-table:
+	@migrate create -ext sql -dir internal/db/migrations -seq create_users_table
+
+# (-- after creating this field, we need to change the go model struct also)
+migrate-create-table-add-phone:  
+	@migrate create -ext sql -dir internal/db/migrations -seq add_phone_to_students  
+
+After creating this file add this code in up.sql :- ALTER TABLE students ADD COLUMN phone VARCHAR(15);
+in down.sql :- ALTER TABLE students DROP COLUMN phone;
