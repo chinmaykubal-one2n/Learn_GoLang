@@ -20,7 +20,12 @@ func RegisterRoutes(r *gin.Engine) {
 }
 
 func list(c *gin.Context) {
-	c.JSON(http.StatusOK, service.ListStudents())
+	students, err := service.ListStudents()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, students)
 }
 
 func get(c *gin.Context) {
@@ -38,7 +43,11 @@ func create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	student := service.CreateStudent(input)
+	student, err := service.CreateStudent(input)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 	c.JSON(http.StatusCreated, student)
 }
 
