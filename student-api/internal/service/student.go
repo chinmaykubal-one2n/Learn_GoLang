@@ -8,10 +8,13 @@ import (
 	"github.com/google/uuid"
 )
 
-func ListStudents() []model.Student {
+func ListStudents() ([]model.Student, error) {
 	var students []model.Student
-	db.DB.Find(&students)
-	return students
+	result := db.DB.Find(&students)
+	if result.Error != nil {
+		return []model.Student{}, errors.New("student not found")
+	}
+	return students, nil
 }
 
 func GetStudent(id string) (model.Student, error) {
@@ -23,10 +26,13 @@ func GetStudent(id string) (model.Student, error) {
 	return student, nil
 }
 
-func CreateStudent(s model.Student) model.Student {
+func CreateStudent(s model.Student) (model.Student, error) {
 	s.ID = uuid.New().String()
-	db.DB.Create(&s)
-	return s
+	result := db.DB.Create(&s)
+	if result.Error != nil {
+		return model.Student{}, result.Error
+	}
+	return s, nil
 }
 
 func UpdateStudent(id string, updated model.Student) (model.Student, error) {
