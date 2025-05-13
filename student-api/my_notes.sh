@@ -71,6 +71,6 @@ in down.sql :- ALTER TABLE students DROP COLUMN phone;
 5. atlas migrate apply --env gorm
 6. atlas migrate down --env gorm  
 7. atlas migrate status --env gorm  
-
+8. atlas migrate rm 20250513115014 --env gorm
 
 
