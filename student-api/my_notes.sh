@@ -35,7 +35,23 @@ For DB migration
 3.https://github.com/golang-migrate/migrate/blob/master/GETTING_STARTED.md (Create migrations)
 4.
 migrate-create-table:
-	@migrate create -ext sql -dir internal/db/migrations -seq create_users_table
+	@migrate create -ext sql -dir internal/db/migrations -seq create_users_table # then write schema in it.
+
+
+migrate-up:
+	@migrate -path internal/db/migrations -database $(DB_URL) up
+
+migrate-down:
+	@migrate -path internal/db/migrations -database $(DB_URL) down 1
+
+migrate-status:
+	@migrate -path internal/db/migrations -database $(DB_URL) version
+
+migrate-force:
+	@migrate -path internal/db/migrations -database $(DB_URL) force VERSION
+
+
+	
 
 # (-- after creating this field, we need to change the go model struct also)
 migrate-create-table-add-phone:  
@@ -43,3 +59,18 @@ migrate-create-table-add-phone:
 
 After creating this file add this code in up.sql :- ALTER TABLE students ADD COLUMN phone VARCHAR(15);
 in down.sql :- ALTER TABLE students DROP COLUMN phone;
+
+
+# DB migration Atlas with GORM
+# (https://atlasgo.io/)
+1. curl -sSf https://atlasgo.sh | sh 
+2. go get -u ariga.io/atlas-provider-gorm
+3. Create an Atlas Configuration File atlas.hcl
+# COMMANDS SECTION
+4. atlas migrate diff --env gorm # add new field in struct and then run this command  
+5. atlas migrate apply --env gorm
+6. atlas migrate down --env gorm  
+7. atlas migrate status --env gorm  
+
+
+
