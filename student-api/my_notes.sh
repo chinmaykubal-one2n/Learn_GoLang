@@ -74,3 +74,7 @@ in down.sql :- ALTER TABLE students DROP COLUMN phone;
 8. atlas migrate rm 20250513115014 --env gorm
 
 
+# gin-jwt middleware (https://github.com/appleboy/gin-jwt)
+1. 
+export GO111MODULE=on
+go get github.com/appleboy/gin-jwt/v2

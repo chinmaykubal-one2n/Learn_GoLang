@@ -8,15 +8,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterRoutes(r *gin.Engine) {
-	student := r.Group("/students")
-	{
-		student.GET("", list)
-		student.GET("/:id", get)
-		student.POST("", create)
-		student.PUT("/:id", update)
-		student.DELETE("/:id", deleteStudent)
-	}
+func RegisterRoutes(r *gin.RouterGroup) {
+	r.GET("/students", list)
+	r.GET("/students/:id", get)
+	r.POST("/students", create)
+	r.PUT("/students/:id", update)
+	r.DELETE("/students/:id", deleteStudent)
 }
 
 func list(c *gin.Context) {

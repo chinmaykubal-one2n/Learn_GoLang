@@ -4,6 +4,7 @@ import (
 	"log"
 	"student-api/internal/db"
 	"student-api/internal/handler"
+	"student-api/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -17,7 +18,19 @@ func main() {
 	db.Connect()
 
 	r := gin.Default()
-	handler.RegisterRoutes(r)
+
+	authMiddleware, err := middleware.AuthMiddleware()
+	if err != nil {
+		log.Fatalf("JWT Error: %s", err.Error())
+	}
+
+	r.POST("/login", authMiddleware.LoginHandler)
+
+	api := r.Group("/api")
+	api.Use(authMiddleware.MiddlewareFunc())
+	{
+		handler.RegisterRoutes(api)
+	}
 
 	r.Run(":8080")
 }
