@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"errors"
+	"os"
 	"student-api/internal/model"
 	"time"
 
@@ -18,7 +19,7 @@ var identityKey = "username"
 func AuthMiddleware() (*jwt.GinJWTMiddleware, error) {
 	return jwt.New(&jwt.GinJWTMiddleware{
 		Realm:       "student zone",
-		Key:         []byte("secret key"), // Use a strong key in production!
+		Key:         []byte(os.Getenv("JWT_SECRET")),
 		Timeout:     time.Hour,
 		MaxRefresh:  time.Hour,
 		IdentityKey: identityKey,
@@ -27,7 +28,7 @@ func AuthMiddleware() (*jwt.GinJWTMiddleware, error) {
 		Authenticator: func(c *gin.Context) (interface{}, error) {
 			var login model.Login
 			if err := c.ShouldBindJSON(&login); err != nil {
-				return "", jwt.ErrMissingLoginValues
+				return nil, jwt.ErrMissingLoginValues
 			}
 			// Hardcoded credentials for demo. Replace with DB check.
 			if login.Username == "admin" && login.Password == "password" {
