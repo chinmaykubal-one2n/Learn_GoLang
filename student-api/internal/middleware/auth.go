@@ -30,7 +30,7 @@ func AuthMiddleware() (*jwt.GinJWTMiddleware, error) {
 			if err := c.ShouldBindJSON(&login); err != nil {
 				return nil, jwt.ErrMissingLoginValues
 			}
-			// Hardcoded credentials for demo. Replace with DB check.
+			// Hardcoded credentials for demo purpose
 			if login.Username == "admin" && login.Password == "password" {
 				return &User{UserName: login.Username}, nil
 			}
@@ -55,8 +55,11 @@ func AuthMiddleware() (*jwt.GinJWTMiddleware, error) {
 
 		// Authorizator checks if the user has permission
 		Authorizator: func(data interface{}, c *gin.Context) bool {
-			_, ok := data.(*User)
-			return ok
+			user, ok := data.(*User)
+			if !ok {
+				return false
+			}
+			return user.UserName == "admin" // Hardcoded credentials for demo purpose
 		},
 
 		// Unauthorized handles unauthorized requests
