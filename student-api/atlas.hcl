@@ -1,6 +1,5 @@
 env "gorm" {
   src = data.external_schema.gorm.url
-  url = "env://DB_URL" 
   dev = "docker://postgres/15"
   migration {
     dir = "file://internal/db/migrations"
