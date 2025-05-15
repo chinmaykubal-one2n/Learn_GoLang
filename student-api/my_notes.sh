@@ -23,11 +23,13 @@ ALTER USER postgres WITH PASSWORD 'your_new_password';
 exit
 
 # .env content
-# DB_HOST=localhost
-# DB_USER=postgres
-# DB_PASSWORD=ocYHVBzBVQYoQg50iAIE
-# DB_NAME=studentdb
-# DB_PORT=5432
+# DB_HOST=
+# DB_USER=
+# DB_PASSWORD=
+# DB_NAME=
+# DB_PORT=
+# DB_URL=
+# JWT_SECRET=
 
 For DB migration 
 1.(https://github.com/golang-migrate/migrate/tree/master/cmd/migrate#linux-deb-package) (install package)
