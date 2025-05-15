@@ -1,6 +1,6 @@
 env "gorm" {
   src = data.external_schema.gorm.url
-  url = "postgres://postgres:ocYHVBzBVQYoQg50iAIE@localhost:5432/studentdb?sslmode=disable"
+  url = "env://DB_URL" 
   dev = "docker://postgres/15"
   migration {
     dir = "file://internal/db/migrations"
