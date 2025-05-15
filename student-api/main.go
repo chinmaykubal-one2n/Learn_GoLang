@@ -17,20 +17,20 @@ func main() {
 
 	db.Connect()
 
-	r := gin.Default()
+	routerEngine := gin.Default()
 
 	authMiddleware, err := middleware.AuthMiddleware()
 	if err != nil {
 		log.Fatalf("JWT Error: %s", err.Error())
 	}
 
-	r.POST("/login", authMiddleware.LoginHandler)
+	routerEngine.POST("/login", authMiddleware.LoginHandler)
 
-	api := r.Group("/api")
+	api := routerEngine.Group("/api")
 	api.Use(authMiddleware.MiddlewareFunc())
 	{
 		handler.RegisterRoutes(api)
 	}
 
-	r.Run(":8080")
+	routerEngine.Run(":8080")
 }
