@@ -7,6 +7,20 @@
   },
   "item": [
     {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/healthz",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["healthz"]
+        }
+      }
+    },
+    {
       "name": "Login",
       "request": {
         "method": "POST",

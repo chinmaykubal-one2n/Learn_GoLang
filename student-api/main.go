@@ -18,6 +18,7 @@ func main() {
 	db.Connect()
 
 	routerEngine := gin.Default()
+	routerEngine.GET("/healthz", handler.HealthCheck)
 
 	authMiddleware, err := middleware.AuthMiddleware()
 	if err != nil {

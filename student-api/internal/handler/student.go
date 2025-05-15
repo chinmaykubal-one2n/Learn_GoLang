@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"student-api/internal/model"
 	"student-api/internal/service"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,6 +15,13 @@ func RegisterRoutes(r *gin.RouterGroup) {
 	r.POST("/students", create)
 	r.PUT("/students/:id", update)
 	r.DELETE("/students/:id", deleteStudent)
+}
+
+func HealthCheck(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"status":    "ok",
+		"timestamp": time.Now().Format(time.RFC3339),
+	})
 }
 
 func list(c *gin.Context) {
