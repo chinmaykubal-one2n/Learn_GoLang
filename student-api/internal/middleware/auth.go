@@ -12,6 +12,7 @@ import (
 
 type User struct {
 	UserName string
+	Role     string
 }
 
 var identityKey = "username"
@@ -32,8 +33,13 @@ func AuthMiddleware() (*jwt.GinJWTMiddleware, error) {
 			}
 			// Hardcoded credentials for demo purpose
 			if login.Username == "admin" && login.Password == "password" {
-				return &User{UserName: login.Username}, nil
+				return &User{UserName: login.Username, Role: "admin"}, nil
 			}
+
+			if login.Username == "tester" && login.Password == "password" {
+				return &User{UserName: login.Username, Role: "tester"}, nil
+			}
+
 			return nil, errors.New("invalid credentials")
 		},
 
@@ -42,6 +48,7 @@ func AuthMiddleware() (*jwt.GinJWTMiddleware, error) {
 			if user, ok := data.(*User); ok {
 				return jwt.MapClaims{
 					identityKey: user.UserName,
+					"role":      user.Role,
 				}
 			}
 			return jwt.MapClaims{}
@@ -50,7 +57,10 @@ func AuthMiddleware() (*jwt.GinJWTMiddleware, error) {
 		// IdentityHandler gets identity from token
 		IdentityHandler: func(c *gin.Context) interface{} {
 			claims := jwt.ExtractClaims(c)
-			return &User{UserName: claims[identityKey].(string)}
+			return &User{
+				UserName: claims[identityKey].(string),
+				Role:     claims["role"].(string),
+			}
 		},
 
 		// Authorizator checks if the user has permission
@@ -59,7 +69,19 @@ func AuthMiddleware() (*jwt.GinJWTMiddleware, error) {
 			if !ok {
 				return false
 			}
-			return user.UserName == "admin" // Hardcoded credentials for demo purpose
+
+			// Allow all routes for admin
+			if user.Role == "admin" {
+				return true
+			}
+
+			// Deny DELETE requests for tester
+			if user.Role == "tester" && c.Request.Method == "DELETE" {
+				return false
+			}
+
+			// Allow other operations for tester
+			return true
 		},
 
 		// Unauthorized handles unauthorized requests
