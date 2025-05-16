@@ -20,6 +20,8 @@ func main() {
 	routerEngine := gin.Default()
 	routerEngine.GET("/healthz", handler.HealthCheck)
 
+	routerEngine.POST("/register", handler.RegisterTeacher)
+
 	authMiddleware, err := middleware.AuthMiddleware()
 	if err != nil {
 		log.Fatalf("JWT Error: %s", err.Error())
