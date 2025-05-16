@@ -274,7 +274,12 @@
 	"variable": [
 		{
 			"key": "token",
-			"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDczNzcwMjcsIm9yaWdfaWF0IjoxNzQ3MzczNDI3LCJyb2xlIjoiYWRtaW4iLCJ1c2VybmFtZSI6ImFkbWluIn0.SiYIysA8aGviEpciZ_PccAHGx1icN0AZ_WrTKusO-OU",
+			"value": "",
+			"type": "default"
+		},
+			{
+			"key": "student_id",
+			"value": "",
 			"type": "default"
 		}
 	]
