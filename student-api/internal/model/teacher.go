@@ -1,10 +1,9 @@
 package model
 
-import "gorm.io/gorm"
-
 type Teacher struct {
-	gorm.Model
-	Username string `gorm:"unique;not null"`
-	Password string `gorm:"not null"`
-	Role     string `gorm:"not null"` // e.g., "admin", "regular", etc.
+	ID       string `gorm:"primaryKey" json:"id"`
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+	Email    string `json:"email" binding:"required,email"`
+	Role     string `json:"role" binding:"required"` // e.g., "admin", "regular", etc.
 }
