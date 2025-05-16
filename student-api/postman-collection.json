@@ -57,6 +57,20 @@
       }
     },
     {
+      "name": "Refresh Token",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": {
+          "raw": "http://localhost:8080/refresh_token",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["refresh_token"]
+        }
+      }
+    },
+    {
       "name": "Create Student",
       "request": {
         "method": "POST",

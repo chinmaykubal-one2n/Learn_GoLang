@@ -22,7 +22,7 @@ func AuthMiddleware() (*jwt.GinJWTMiddleware, error) {
 		Realm:       "student zone",
 		Key:         []byte(os.Getenv("JWT_SECRET")),
 		Timeout:     time.Hour,
-		MaxRefresh:  time.Hour,
+		MaxRefresh:  24 * time.Hour,
 		IdentityKey: identityKey,
 
 		// Authenticator runs on login

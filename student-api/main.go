@@ -26,6 +26,7 @@ func main() {
 	}
 
 	routerEngine.POST("/login", authMiddleware.LoginHandler)
+	routerEngine.GET("/refresh_token", authMiddleware.RefreshHandler)
 
 	api := routerEngine.Group("/api")
 	api.Use(authMiddleware.MiddlewareFunc())
