@@ -40,7 +40,6 @@ func UpdateStudent(id string, updated model.Student) (model.Student, error) {
 	if err := db.DB.First(&student, "id = ?", id).Error; err != nil {
 		return model.Student{}, errors.New("student not found")
 	}
-
 	student.Name = updated.Name
 	student.Age = updated.Age
 	student.Email = updated.Email
