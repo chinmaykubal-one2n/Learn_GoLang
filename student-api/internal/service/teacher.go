@@ -23,3 +23,14 @@ func CreateTeacher(t model.Teacher) (model.Teacher, error) {
 	}
 	return t, nil
 }
+
+func GetTeacher(username string) (model.Teacher, error) {
+	var teacher model.Teacher
+	result := db.DB.Where("username = ?", username).First(&teacher)
+	if result.Error != nil {
+		return model.Teacher{}, result.Error
+	}
+	return teacher, nil
+}
+
+// for now no need of the full crud operation

@@ -4,16 +4,23 @@ import (
 	"errors"
 	"os"
 	"student-api/internal/model"
+	"student-api/internal/service"
 	"time"
 
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
 	UserName string
 	Role     string
 }
+
+const (
+	adminRole   = "admin"
+	regularRole = "regular"
+)
 
 var identityKey = "username"
 
@@ -31,16 +38,21 @@ func AuthMiddleware() (*jwt.GinJWTMiddleware, error) {
 			if err := c.ShouldBindJSON(&login); err != nil {
 				return nil, jwt.ErrMissingLoginValues
 			}
-			// Hardcoded credentials for demo purpose
-			if login.Username == "admin" && login.Password == "password" {
-				return &User{UserName: login.Username, Role: "admin"}, nil
+
+			teacher, err := service.GetTeacher(login.Username)
+			if err != nil {
+				return nil, errors.New("invalid username")
 			}
 
-			if login.Username == "tester" && login.Password == "password" {
-				return &User{UserName: login.Username, Role: "tester"}, nil
+			err = bcrypt.CompareHashAndPassword([]byte(teacher.Password), []byte(login.Password))
+			if err != nil {
+				return nil, errors.New("invalid password")
 			}
 
-			return nil, errors.New("invalid credentials")
+			return &User{
+				UserName: teacher.Username,
+				Role:     teacher.Role,
+			}, nil
 		},
 
 		// PayloadFunc defines custom claims
@@ -70,17 +82,17 @@ func AuthMiddleware() (*jwt.GinJWTMiddleware, error) {
 				return false
 			}
 
-			// Allow all routes for admin
-			if user.Role == "admin" {
+			// Allow all routes for adminRole
+			if user.Role == adminRole {
 				return true
 			}
 
-			// Deny DELETE requests for tester
-			if user.Role == "tester" && c.Request.Method == "DELETE" {
+			// Deny DELETE requests for regularRole
+			if user.Role == regularRole && c.Request.Method == "DELETE" {
 				return false
 			}
 
-			// Allow other operations for tester
+			// Allow other operations for regularRole
 			return true
 		},
 
