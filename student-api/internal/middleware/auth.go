@@ -28,7 +28,7 @@ func AuthMiddleware() (*jwt.GinJWTMiddleware, error) {
 	return jwt.New(&jwt.GinJWTMiddleware{
 		Realm:       "student zone",
 		Key:         []byte(os.Getenv("JWT_SECRET")),
-		Timeout:     time.Hour,
+		Timeout:     5 * time.Minute,
 		MaxRefresh:  24 * time.Hour,
 		IdentityKey: identityKey,
 
