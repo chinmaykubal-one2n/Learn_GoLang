@@ -41,12 +41,12 @@ func AuthMiddleware() (*jwt.GinJWTMiddleware, error) {
 
 			teacher, err := service.GetTeacher(login.Username)
 			if err != nil {
-				return nil, errors.New("invalid username")
+				return nil, errors.New("Invalid username")
 			}
 
 			err = bcrypt.CompareHashAndPassword([]byte(teacher.Password), []byte(login.Password))
 			if err != nil {
-				return nil, errors.New("invalid password")
+				return nil, errors.New("Invalid password")
 			}
 
 			return &User{

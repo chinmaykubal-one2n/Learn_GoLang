@@ -12,7 +12,7 @@ func ListStudents() ([]model.Student, error) {
 	var students []model.Student
 	result := db.DB.Find(&students)
 	if result.Error != nil {
-		return []model.Student{}, errors.New("student not found")
+		return []model.Student{}, errors.New("Student not found")
 	}
 	return students, nil
 }
@@ -21,7 +21,7 @@ func GetStudent(id string) (model.Student, error) {
 	var student model.Student
 	result := db.DB.First(&student, "id = ?", id)
 	if result.Error != nil {
-		return model.Student{}, errors.New("student not found")
+		return model.Student{}, errors.New("Student not found")
 	}
 	return student, nil
 }
@@ -38,7 +38,7 @@ func CreateStudent(s model.Student) (model.Student, error) {
 func UpdateStudent(id string, updated model.Student) (model.Student, error) {
 	var student model.Student
 	if err := db.DB.First(&student, "id = ?", id).Error; err != nil {
-		return model.Student{}, errors.New("student not found")
+		return model.Student{}, errors.New("Student not found")
 	}
 	student.Name = updated.Name
 	student.Age = updated.Age
@@ -50,7 +50,7 @@ func UpdateStudent(id string, updated model.Student) (model.Student, error) {
 func DeleteStudent(id string) error {
 	result := db.DB.Delete(&model.Student{}, "id = ?", id)
 	if result.RowsAffected == 0 {
-		return errors.New("student not found")
+		return errors.New("Student not found")
 	}
 	return nil
 }
