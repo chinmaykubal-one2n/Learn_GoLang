@@ -8,7 +8,17 @@ import (
 	"github.com/google/uuid"
 )
 
-func ListStudents() ([]model.Student, error) {
+type StudentService interface {
+	ListStudents() ([]model.Student, error)
+	GetStudent(id string) (model.Student, error)
+	CreateStudent(s model.Student) (model.Student, error)
+	UpdateStudent(id string, updated model.Student) (model.Student, error)
+	DeleteStudent(id string) error
+}
+
+type StudentServiceImpl struct{}
+
+func (s *StudentServiceImpl) ListStudents() ([]model.Student, error) {
 	var students []model.Student
 	result := db.DB.Find(&students)
 	if result.Error != nil {
@@ -17,7 +27,7 @@ func ListStudents() ([]model.Student, error) {
 	return students, nil
 }
 
-func GetStudent(id string) (model.Student, error) {
+func (s *StudentServiceImpl) GetStudent(id string) (model.Student, error) {
 	var student model.Student
 	result := db.DB.First(&student, "id = ?", id)
 	if result.Error != nil {
@@ -26,16 +36,16 @@ func GetStudent(id string) (model.Student, error) {
 	return student, nil
 }
 
-func CreateStudent(s model.Student) (model.Student, error) {
-	s.ID = uuid.New().String()
-	result := db.DB.Create(&s)
+func (s *StudentServiceImpl) CreateStudent(st model.Student) (model.Student, error) {
+	st.ID = uuid.New().String()
+	result := db.DB.Create(&st)
 	if result.Error != nil {
 		return model.Student{}, result.Error
 	}
-	return s, nil
+	return st, nil
 }
 
-func UpdateStudent(id string, updated model.Student) (model.Student, error) {
+func (s *StudentServiceImpl) UpdateStudent(id string, updated model.Student) (model.Student, error) {
 	var student model.Student
 	if err := db.DB.First(&student, "id = ?", id).Error; err != nil {
 		return model.Student{}, errors.New("Student not found")
@@ -47,7 +57,7 @@ func UpdateStudent(id string, updated model.Student) (model.Student, error) {
 	return student, nil
 }
 
-func DeleteStudent(id string) error {
+func (s *StudentServiceImpl) DeleteStudent(id string) error {
 	result := db.DB.Delete(&model.Student{}, "id = ?", id)
 	if result.RowsAffected == 0 {
 		return errors.New("Student not found")

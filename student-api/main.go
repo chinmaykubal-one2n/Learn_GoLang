@@ -5,6 +5,7 @@ import (
 	"student-api/internal/db"
 	"student-api/internal/handler"
 	"student-api/internal/middleware"
+	"student-api/internal/service"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -17,8 +18,12 @@ func main() {
 
 	db.Connect()
 
+	studentService := &service.StudentServiceImpl{}
+
+	h := handler.NewHandler(studentService)
+
 	routerEngine := gin.Default()
-	routerEngine.GET("/healthz", handler.HealthCheck)
+	routerEngine.GET("/healthz", h.HealthCheck)
 
 	routerEngine.POST("/register", handler.RegisterTeacher)
 
@@ -33,7 +38,7 @@ func main() {
 	api := routerEngine.Group("/api")
 	api.Use(authMiddleware.MiddlewareFunc())
 	{
-		handler.RegisterRoutes(api)
+		h.RegisterRoutes(api)
 	}
 
 	routerEngine.Run(":8080")

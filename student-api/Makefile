@@ -1,9 +1,12 @@
-.PHONY: run migrate-diff migrate-apply migrate-down migrate-status
+.PHONY: run test migrate-diff migrate-apply migrate-down migrate-status
 
 include .env
 
 run:
 	@go run main.go
+
+test:
+	@go test ./internal/tests/
 
 migrate-diff:
 	@atlas migrate diff --env gorm  

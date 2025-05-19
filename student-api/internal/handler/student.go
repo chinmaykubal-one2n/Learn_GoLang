@@ -9,23 +9,31 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterRoutes(r *gin.RouterGroup) {
-	r.GET("/students", list)
-	r.GET("/students/:id", get)
-	r.POST("/students", create)
-	r.PUT("/students/:id", update)
-	r.DELETE("/students/:id", deleteStudent)
+type Handler struct {
+	service service.StudentService
 }
 
-func HealthCheck(c *gin.Context) {
+func NewHandler(s service.StudentService) *Handler {
+	return &Handler{service: s}
+}
+
+func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
+	r.GET("/students", h.list)
+	r.GET("/students/:id", h.get)
+	r.POST("/students", h.create)
+	r.PUT("/students/:id", h.update)
+	r.DELETE("/students/:id", h.deleteStudent)
+}
+
+func (h *Handler) HealthCheck(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":    "ok",
 		"timestamp": time.Now().Format(time.RFC3339),
 	})
 }
 
-func list(c *gin.Context) {
-	students, err := service.ListStudents()
+func (h *Handler) list(c *gin.Context) {
+	students, err := h.service.ListStudents()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -33,8 +41,8 @@ func list(c *gin.Context) {
 	c.JSON(http.StatusOK, students)
 }
 
-func get(c *gin.Context) {
-	s, err := service.GetStudent(c.Param("id"))
+func (h *Handler) get(c *gin.Context) {
+	s, err := h.service.GetStudent(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -42,13 +50,13 @@ func get(c *gin.Context) {
 	c.JSON(http.StatusOK, s)
 }
 
-func create(c *gin.Context) {
+func (h *Handler) create(c *gin.Context) {
 	var input model.Student
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	student, err := service.CreateStudent(input)
+	student, err := h.service.CreateStudent(input)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -56,13 +64,13 @@ func create(c *gin.Context) {
 	c.JSON(http.StatusCreated, student)
 }
 
-func update(c *gin.Context) {
+func (h *Handler) update(c *gin.Context) {
 	var input model.Student
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	student, err := service.UpdateStudent(c.Param("id"), input)
+	student, err := h.service.UpdateStudent(c.Param("id"), input)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -70,8 +78,8 @@ func update(c *gin.Context) {
 	c.JSON(http.StatusOK, student)
 }
 
-func deleteStudent(c *gin.Context) {
-	err := service.DeleteStudent(c.Param("id"))
+func (h *Handler) deleteStudent(c *gin.Context) {
+	err := h.service.DeleteStudent(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
