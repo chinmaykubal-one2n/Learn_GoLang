@@ -157,7 +157,7 @@ func TestUpdateStudent(t *testing.T) {
 		input := model.Student{Name: "Ghost", Age: 100, Email: "ghost@example.com"}
 		body := `{"name":"Ghost","age":100,"email":"ghost@example.com"}`
 
-		mockService.On("UpdateStudent", id, input).Return(model.Student{}, errors.New("student not found"))
+		mockService.On("UpdateStudent", id, input).Return(model.Student{}, errors.New("Student not found"))
 
 		req, _ := http.NewRequest("PUT", "/students/999", strings.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
@@ -166,6 +166,11 @@ func TestUpdateStudent(t *testing.T) {
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
 		mockService.AssertCalled(t, "UpdateStudent", id, input)
+
+		var respBody map[string]string
+		err := json.Unmarshal(w.Body.Bytes(), &respBody)
+		assert.Equal(t, nil, err)
+		assert.Equal(t, "Student not found", respBody["error"])
 	})
 
 	t.Run("bad request", func(t *testing.T) {
@@ -198,7 +203,7 @@ func TestDeleteStudent(t *testing.T) {
 
 	t.Run("not found", func(t *testing.T) {
 		id := "999"
-		mockService.On("DeleteStudent", id).Return(errors.New("student not found"))
+		mockService.On("DeleteStudent", id).Return(errors.New("Student not found"))
 
 		req, _ := http.NewRequest("DELETE", "/students/999", nil)
 		w := httptest.NewRecorder()
@@ -206,6 +211,11 @@ func TestDeleteStudent(t *testing.T) {
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
 		mockService.AssertCalled(t, "DeleteStudent", id)
+
+		var respBody map[string]string
+		err := json.Unmarshal(w.Body.Bytes(), &respBody)
+		assert.Equal(t, nil, err)
+		assert.Equal(t, "Student not found", respBody["error"])
 	})
 }
 
@@ -237,7 +247,7 @@ func TestListStudents(t *testing.T) {
 		router := gin.Default()
 		h.RegisterRoutes(router.Group("/"))
 
-		mockService.On("ListStudents").Return(nil, errors.New("database error"))
+		mockService.On("ListStudents").Return([]model.Student{}, errors.New("Student not found"))
 
 		req, _ := http.NewRequest("GET", "/students", nil)
 		w := httptest.NewRecorder()
@@ -245,6 +255,11 @@ func TestListStudents(t *testing.T) {
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 		mockService.AssertCalled(t, "ListStudents")
-		mockService.AssertExpectations(t)
+
+		var respBody map[string]string
+		err := json.Unmarshal(w.Body.Bytes(), &respBody)
+		assert.Equal(t, nil, err)
+		assert.Equal(t, "Student not found", respBody["error"])
+
 	})
 }
