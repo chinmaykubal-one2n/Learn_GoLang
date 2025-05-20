@@ -9,9 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var DB *gorm.DB
-
-func Connect() {
+func Connect() *gorm.DB {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
 		os.Getenv("DB_HOST"),
 		os.Getenv("DB_USER"),
@@ -25,11 +23,6 @@ func Connect() {
 		log.Fatal("Failed to connect to DB: ", err)
 	}
 
-	// // Auto-migrate the schema
-	// if err := db.AutoMigrate(&model.Student{}); err != nil {
-	// 	log.Fatal("Failed to auto-migrate Student model: ", err)
-	// }
-
-	DB = db
 	log.Println("Connected to PostgreSQL database")
+	return db
 }

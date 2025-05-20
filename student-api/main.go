@@ -16,16 +16,24 @@ func main() {
 		log.Println("No .env file found, using environment variables")
 	}
 
-	db.Connect()
+	dbInstance := db.Connect()
 
-	studentService := &service.StudentServiceImpl{}
+	studentService := &service.StudentServiceImpl{
+		DB: dbInstance,
+	}
+
+	teacherHandler := &handler.TeacherHandler{
+		Service: &service.TeacherServiceImpl{
+			DB: dbInstance,
+		},
+	}
 
 	h := handler.NewHandler(studentService)
 
 	routerEngine := gin.Default()
 	routerEngine.GET("/healthz", h.HealthCheck)
 
-	routerEngine.POST("/register", handler.RegisterTeacher)
+	routerEngine.POST("/register", teacherHandler.RegisterTeacher)
 
 	authMiddleware, err := middleware.AuthMiddleware()
 	if err != nil {
