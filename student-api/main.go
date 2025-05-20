@@ -7,9 +7,17 @@ import (
 	"student-api/internal/middleware"
 	"student-api/internal/service"
 
+	_ "student-api/docs"
+
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
+
+// @title Swagger Example API
+// @version 1.0
+// @description This is a sample server Petstore server.
 
 func main() {
 	if err := godotenv.Load(); err != nil {
@@ -36,6 +44,7 @@ func main() {
 
 	routerEngine := gin.Default()
 	routerEngine.GET("/healthz", h.HealthCheck)
+	routerEngine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	routerEngine.POST("/register", teacherHandler.RegisterTeacher)
 
