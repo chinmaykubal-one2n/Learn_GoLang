@@ -22,6 +22,10 @@ func main() {
 		DB: dbInstance,
 	}
 
+	teacherService := &service.TeacherServiceImpl{
+		DB: dbInstance,
+	}
+
 	teacherHandler := &handler.TeacherHandler{
 		Service: &service.TeacherServiceImpl{
 			DB: dbInstance,
@@ -35,7 +39,7 @@ func main() {
 
 	routerEngine.POST("/register", teacherHandler.RegisterTeacher)
 
-	authMiddleware, err := middleware.AuthMiddleware()
+	authMiddleware, err := middleware.AuthMiddleware(teacherService)
 	if err != nil {
 		log.Fatalf("JWT Error: %s", err.Error())
 	}

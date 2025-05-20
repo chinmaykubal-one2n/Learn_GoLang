@@ -24,7 +24,7 @@ const (
 
 var identityKey = "username"
 
-func AuthMiddleware() (*jwt.GinJWTMiddleware, error) {
+func AuthMiddleware(teacherService service.TeacherService) (*jwt.GinJWTMiddleware, error) {
 	return jwt.New(&jwt.GinJWTMiddleware{
 		Realm:       "student zone",
 		Key:         []byte(os.Getenv("JWT_SECRET")),
@@ -35,13 +35,12 @@ func AuthMiddleware() (*jwt.GinJWTMiddleware, error) {
 		// Authenticator runs on login
 		Authenticator: func(c *gin.Context) (interface{}, error) {
 			var login model.Login
-			objTeacherServiceImpl := &service.TeacherServiceImpl{}
 
 			if err := c.ShouldBindJSON(&login); err != nil {
 				return nil, jwt.ErrMissingLoginValues
 			}
 
-			teacher, err := objTeacherServiceImpl.GetTeacher(login.Username)
+			teacher, err := teacherService.GetTeacher(login.Username)
 
 			if err != nil {
 				return nil, errors.New("Invalid username")
