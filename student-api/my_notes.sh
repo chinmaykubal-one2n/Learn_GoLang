@@ -80,3 +80,10 @@ in down.sql :- ALTER TABLE students DROP COLUMN phone;
 1. 
 export GO111MODULE=on
 go get github.com/appleboy/gin-jwt/v2
+
+
+# swggar docs
+go install github.com/swaggo/swag/cmd/swag@latest
+go get -u github.com/swaggo/gin-swagger
+go get -u github.com/swaggo/files
+swag init
