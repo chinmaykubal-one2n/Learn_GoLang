@@ -15,9 +15,9 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-// @title Swagger Example API
-// @version 1.0
-// @description This is a sample server Petstore server.
+//	@title			Swagger Student API
+//	@version		1.0
+//	@description	This is a sample server Student API server.
 
 func main() {
 	if err := godotenv.Load(); err != nil {
