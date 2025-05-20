@@ -1,4 +1,4 @@
-.PHONY: run test migrate-diff migrate-apply migrate-down migrate-status
+.PHONY: run test migrate-diff migrate-apply migrate-down migrate-status swag
 
 include .env
 
@@ -16,3 +16,6 @@ migrate-apply:
 
 migrate-status:
 	@atlas migrate status --env gorm --url $(DB_URL)   	
+
+swag:
+	@swag init -d ./,./internal/handler/,./internal/model/
