@@ -239,10 +239,63 @@
                     }
                 }
             }
+        },
+        "/register": {
+            "post": {
+                "description": "Register a new teacher with the provided credentials",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Register a new teacher",
+                "parameters": [
+                    {
+                        "description": "Teacher registration details",
+                        "name": "teacher",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.Teacher"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Successfully registered teacher",
+                        "schema": {
+                            "$ref": "#/definitions/model.Teacher"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
         "model.Student": {
+            "description": "Student information including personal details",
             "type": "object",
             "required": [
                 "age",
@@ -251,17 +304,53 @@
             ],
             "properties": {
                 "age": {
+                    "description": "Age of the student (must be between 1 and 120)\n@minimum 1\n@maximum 120\n@example 18\n@required true",
                     "type": "integer",
                     "maximum": 120,
                     "minimum": 1
                 },
                 "email": {
+                    "description": "Email address of the student\n@example \"john.smith@example.com\"\n@pattern ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$\n@required true",
                     "type": "string"
                 },
                 "id": {
+                    "description": "Unique identifier of the student\n@example \"550e8400-e29b-41d4-a716-446655440000\"",
                     "type": "string"
                 },
                 "name": {
+                    "description": "Full name of the student\n@example \"John Smith\"\n@required true",
+                    "type": "string"
+                }
+            }
+        },
+        "model.Teacher": {
+            "description": "Teacher account information for authentication and authorization",
+            "type": "object",
+            "required": [
+                "email",
+                "password",
+                "role",
+                "username"
+            ],
+            "properties": {
+                "email": {
+                    "description": "Email address of the teacher\n@example \"john.doe@school.com\"\n@required\n@pattern ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "Unique identifier for the teacher\n@example \"123e4567-e89b-12d3-a456-426614174000\"",
+                    "type": "string"
+                },
+                "password": {
+                    "description": "Password for authentication (will be hashed)\n@example \"securePassword123\"\n@required",
+                    "type": "string"
+                },
+                "role": {
+                    "description": "Role determines the teacher's permissions (admin or regular)\n@example \"admin\"\n@enum [\"admin\",\"regular\"]\n@required",
+                    "type": "string"
+                },
+                "username": {
+                    "description": "Username for login\n@example \"john.doe\"\n@required",
                     "type": "string"
                 }
             }

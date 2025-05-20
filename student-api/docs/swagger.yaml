@@ -1,20 +1,79 @@
 definitions:
   model.Student:
+    description: Student information including personal details
     properties:
       age:
+        description: |-
+          Age of the student (must be between 1 and 120)
+          @minimum 1
+          @maximum 120
+          @example 18
+          @required true
         maximum: 120
         minimum: 1
         type: integer
       email:
+        description: |-
+          Email address of the student
+          @example "john.smith@example.com"
+          @pattern ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$
+          @required true
         type: string
       id:
+        description: |-
+          Unique identifier of the student
+          @example "550e8400-e29b-41d4-a716-446655440000"
         type: string
       name:
+        description: |-
+          Full name of the student
+          @example "John Smith"
+          @required true
         type: string
     required:
     - age
     - email
     - name
+    type: object
+  model.Teacher:
+    description: Teacher account information for authentication and authorization
+    properties:
+      email:
+        description: |-
+          Email address of the teacher
+          @example "john.doe@school.com"
+          @required
+          @pattern ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$
+        type: string
+      id:
+        description: |-
+          Unique identifier for the teacher
+          @example "123e4567-e89b-12d3-a456-426614174000"
+        type: string
+      password:
+        description: |-
+          Password for authentication (will be hashed)
+          @example "securePassword123"
+          @required
+        type: string
+      role:
+        description: |-
+          Role determines the teacher's permissions (admin or regular)
+          @example "admin"
+          @enum ["admin","regular"]
+          @required
+        type: string
+      username:
+        description: |-
+          Username for login
+          @example "john.doe"
+          @required
+        type: string
+    required:
+    - email
+    - password
+    - role
+    - username
     type: object
 info:
   contact: {}
@@ -176,4 +235,38 @@ paths:
       summary: Health check endpoint
       tags:
       - health
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new teacher with the provided credentials
+      parameters:
+      - description: Teacher registration details
+        in: body
+        name: teacher
+        required: true
+        schema:
+          $ref: '#/definitions/model.Teacher'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Successfully registered teacher
+          schema:
+            $ref: '#/definitions/model.Teacher'
+        "400":
+          description: Invalid input
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register a new teacher
+      tags:
+      - auth
 swagger: "2.0"
