@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"os"
 	"os/signal"
 	"student-api/internal/db"
 	"student-api/internal/handler"
@@ -26,6 +25,11 @@ import (
 //	@description	This is a sample server Student API server.
 
 func main() {
+	// https://github.dev/gin-gonic/examples/blob/master/graceful-shutdown/graceful-shutdown/notify-with-context/server.go
+	// Create context that listens for the interrupt signal from the OS.
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, using environment variables")
 	}
@@ -68,36 +72,33 @@ func main() {
 		h.RegisterRoutes(api)
 	}
 
-	// https://gin-gonic.com/en/docs/examples/graceful-restart-or-stop/
 	srv := &http.Server{
 		Addr:    ":8080",
 		Handler: routerEngine,
 	}
 
+	// Initializing the server in a goroutine so that
+	// it won't block the graceful shutdown handling below
 	go func() {
-		// service connections
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("listen: %s\n", err)
 		}
 	}()
 
-	// Wait for interrupt signal to gracefully shutdown the server with
-	// a timeout of 5 seconds.
-	quit := make(chan os.Signal, 1)
-	// kill (no params) by default sends syscall.SIGTERM
-	// kill -2 is syscall.SIGINT
-	// kill -9 is syscall.SIGKILL but can't be caught, so don't need add it
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-	log.Println("Shutdown Server ...")
+	// Listen for the interrupt signal.
+	<-ctx.Done()
 
+	// Restore default behavior on the interrupt signal and notify user of shutdown.
+	stop()
+	log.Println("shutting down gracefully, press Ctrl+C again to force")
+
+	// The context is used to inform the server it has 5 seconds to finish
+	// the request it is currently handling
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Println("Server Shutdown:", err)
+		log.Fatal("Server forced to shutdown: ", err)
 	}
-	// catching ctx.Done(). timeout of 5 seconds.
-	<-ctx.Done()
-	log.Println("timeout of 5 seconds.")
+
 	log.Println("Server exiting")
 }
