@@ -28,12 +28,12 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:8080/register",
+							"raw": "http://localhost:8090/register",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "8080",
+							"port": "8090",
 							"path": [
 								"register"
 							]
@@ -56,12 +56,12 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:8080/login",
+							"raw": "http://localhost:8090/login",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "8080",
+							"port": "8090",
 							"path": [
 								"login"
 							]
@@ -77,12 +77,12 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8080/healthz",
+					"raw": "http://localhost:8090/healthz",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "8080",
+					"port": "8090",
 					"path": [
 						"healthz"
 					]
@@ -113,12 +113,12 @@
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8080/refresh_token",
+					"raw": "http://localhost:8090/refresh_token",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "8080",
+					"port": "8090",
 					"path": [
 						"refresh_token"
 					]
@@ -145,12 +145,12 @@
 					"raw": "{\n  \"name\": \"Alice\",\n  \"age\": 22,\n  \"email\": \"alice@example.com\"\n}"
 				},
 				"url": {
-					"raw": "http://localhost:8080/api/students",
+					"raw": "http://localhost:8090/api/students",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "8080",
+					"port": "8090",
 					"path": [
 						"api",
 						"students"
@@ -170,12 +170,12 @@
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8080/api/students",
+					"raw": "http://localhost:8090/api/students",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "8080",
+					"port": "8090",
 					"path": [
 						"api",
 						"students"
@@ -195,12 +195,12 @@
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8080/api/students/{{student_id}}",
+					"raw": "http://localhost:8090/api/students/{{student_id}}",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "8080",
+					"port": "8090",
 					"path": [
 						"api",
 						"students",
@@ -229,12 +229,12 @@
 					"raw": "{\n  \"name\": \"Alice Updated\",\n  \"age\": 23,\n  \"email\": \"alice.updated@example.com\"\n}"
 				},
 				"url": {
-					"raw": "http://localhost:8080/api/students/{{student_id}}",
+					"raw": "http://localhost:8090/api/students/{{student_id}}",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "8080",
+					"port": "8090",
 					"path": [
 						"api",
 						"students",
@@ -255,12 +255,12 @@
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8080/api/students/{{student_id}}",
+					"raw": "http://localhost:8090/api/students/{{student_id}}",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "8080",
+					"port": "8090",
 					"path": [
 						"api",
 						"students",

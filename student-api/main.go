@@ -4,10 +4,12 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 	"os/signal"
 	"student-api/internal/db"
 	"student-api/internal/handler"
 	"student-api/internal/middleware"
+	"student-api/internal/otel"
 	"student-api/internal/service"
 	"syscall"
 	"time"
@@ -18,6 +20,7 @@ import (
 	"github.com/joho/godotenv"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 )
 
 //	@title			Swagger Student API
@@ -33,6 +36,9 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, using environment variables")
 	}
+	// Initialize the OpenTelemetry tracer
+	cleanup := otel.InitTracer()
+	defer cleanup(context.Background())
 
 	dbInstance := db.Connect()
 
@@ -53,6 +59,10 @@ func main() {
 	h := handler.NewHandler(studentService)
 
 	routerEngine := gin.Default()
+
+	// OpenTelemetry otelgin middleware
+	routerEngine.Use(otelgin.Middleware(os.Getenv("SERVICE_NAME")))
+
 	routerEngine.GET("/healthz", h.HealthCheck)
 	routerEngine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
@@ -73,7 +83,7 @@ func main() {
 	}
 
 	srv := &http.Server{
-		Addr:    ":8080",
+		Addr:    ":8090",
 		Handler: routerEngine,
 	}
 
