@@ -64,7 +64,7 @@ func main() {
 	routerEngine.Use(otelgin.Middleware(os.Getenv("SERVICE_NAME")))
 
 	routerEngine.GET("/healthz", h.HealthCheck)
-	routerEngine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+	routerEngine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler)) // http://localhost:8090/swagger/index.html
 
 	routerEngine.POST("/register", teacherHandler.RegisterTeacher)
 
