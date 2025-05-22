@@ -31,6 +31,10 @@ exit
 # DB_URL=
 # JWT_SECRET=
 
+# SERVICE_NAME=student-api
+# INSECURE_MODE=true
+# OTEL_EXPORTER_OTLP_ENDPOINT=localhost:4317
+
 For DB migration 
 1.(https://github.com/golang-migrate/migrate/tree/master/cmd/migrate#linux-deb-package) (install package)
 2.migrate -version
