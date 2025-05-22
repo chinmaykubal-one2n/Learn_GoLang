@@ -51,7 +51,7 @@ func (h *Handler) HealthCheck(c *gin.Context) {
 // @Failure 500 {object} map[string]string
 // @Router /api/students [get]
 func (h *Handler) list(c *gin.Context) {
-	students, err := h.service.ListStudents()
+	students, err := h.service.ListStudents(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -69,7 +69,7 @@ func (h *Handler) list(c *gin.Context) {
 // @Failure 404 {object} map[string]string
 // @Router /api/students/{id} [get]
 func (h *Handler) get(c *gin.Context) {
-	s, err := h.service.GetStudent(c.Param("id"))
+	s, err := h.service.GetStudent(c.Param("id"), c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -94,7 +94,7 @@ func (h *Handler) create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	student, err := h.service.CreateStudent(input)
+	student, err := h.service.CreateStudent(input, c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -120,7 +120,7 @@ func (h *Handler) update(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	student, err := h.service.UpdateStudent(c.Param("id"), input)
+	student, err := h.service.UpdateStudent(c.Param("id"), input, c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -138,7 +138,7 @@ func (h *Handler) update(c *gin.Context) {
 // @Failure 404 {object} map[string]string
 // @Router /api/students/{id} [delete]
 func (h *Handler) deleteStudent(c *gin.Context) {
-	err := h.service.DeleteStudent(c.Param("id"))
+	err := h.service.DeleteStudent(c.Param("id"), c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
