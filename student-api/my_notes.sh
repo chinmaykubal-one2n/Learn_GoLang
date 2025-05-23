@@ -35,6 +35,8 @@ exit
 # INSECURE_MODE=true
 # OTEL_EXPORTER_OTLP_ENDPOINT=localhost:4317
 
+#OTLP_ENDPOINT=localhost:4318
+
 For DB migration 
 1.(https://github.com/golang-migrate/migrate/tree/master/cmd/migrate#linux-deb-package) (install package)
 2.migrate -version

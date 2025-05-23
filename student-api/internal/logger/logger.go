@@ -35,7 +35,6 @@ func InitLogger(ctx context.Context, serviceName string, otlpEndpoint string) er
 	core := otelzap.NewCore(serviceName, otelzap.WithLoggerProvider(provider))
 	zapLogger := zap.New(core)
 
-	// Assign to global variable
 	Logger = zapLogger
 
 	// Clean up the provider on application shutdown
