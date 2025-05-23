@@ -3,9 +3,12 @@ package middleware
 import (
 	"errors"
 	"os"
+	logging "student-api/internal/logger"
 	"student-api/internal/model"
 	"student-api/internal/service"
 	"time"
+
+	"go.uber.org/zap"
 
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
@@ -34,22 +37,33 @@ func AuthMiddleware(teacherService service.TeacherService) (*jwt.GinJWTMiddlewar
 
 		// Authenticator runs on login
 		Authenticator: func(c *gin.Context) (interface{}, error) {
-			var login model.Login
+			logging.Logger.Info("[auth-middleware]: Processing login request")
 
+			var login model.Login
 			if err := c.ShouldBindJSON(&login); err != nil {
+				logging.Logger.Error("[auth-middleware]: Missing login values", zap.Error(err))
 				return nil, jwt.ErrMissingLoginValues
 			}
 
-			teacher, err := teacherService.GetTeacher(login.Username)
-
+			teacher, err := teacherService.GetTeacher(login.Username, c.Request.Context())
 			if err != nil {
+				logging.Logger.Error("[auth-middleware]: Invalid username",
+					zap.String("username", login.Username),
+					zap.Error(err))
 				return nil, errors.New("Invalid username")
 			}
 
 			err = bcrypt.CompareHashAndPassword([]byte(teacher.Password), []byte(login.Password))
 			if err != nil {
+				logging.Logger.Error("[auth-middleware]: Invalid password",
+					zap.String("username", login.Username),
+					zap.Error(err))
 				return nil, errors.New("Invalid password")
 			}
+
+			logging.Logger.Info("[auth-middleware]: Login successful",
+				zap.String("username", teacher.Username),
+				zap.String("role", teacher.Role))
 
 			return &User{
 				UserName: teacher.Username,
@@ -81,20 +95,32 @@ func AuthMiddleware(teacherService service.TeacherService) (*jwt.GinJWTMiddlewar
 		Authorizator: func(data interface{}, c *gin.Context) bool {
 			user, ok := data.(*User)
 			if !ok {
+				logging.Logger.Error("[auth-middleware]: Invalid user data type in Authorizator")
 				return false
 			}
 
 			// Allow all routes for adminRole
 			if user.Role == adminRole {
+				logging.Logger.Info("[auth-middleware]: Admin access granted",
+					zap.String("username", user.UserName),
+					zap.String("method", c.Request.Method),
+					zap.String("path", c.Request.URL.Path))
 				return true
 			}
 
 			// Deny DELETE requests for regularRole
 			if user.Role == regularRole && c.Request.Method == "DELETE" {
+				logging.Logger.Warn("[auth-middleware]: Regular user attempted delete operation",
+					zap.String("username", user.UserName),
+					zap.String("path", c.Request.URL.Path))
 				return false
 			}
 
 			// Allow other operations for regularRole
+			logging.Logger.Info("[auth-middleware]: Regular access granted",
+				zap.String("username", user.UserName),
+				zap.String("method", c.Request.Method),
+				zap.String("path", c.Request.URL.Path))
 			return true
 		},
 

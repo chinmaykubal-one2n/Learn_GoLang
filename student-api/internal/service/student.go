@@ -30,7 +30,7 @@ func (s *StudentServiceImpl) ListStudents(ctx context.Context) ([]model.Student,
 	result := s.DB.WithContext(ctx).Find(&students)
 	// result := s.DB.Find(&students)
 	if result.Error != nil {
-		logging.Logger.Info("[list-service]: Failed to fetch students")
+		logging.Logger.Error("[list-service]: Failed to fetch students")
 		return []model.Student{}, errors.New("Student not found")
 	}
 	logging.Logger.Info("[list-service]: Successfully fetched students", zap.Int("count", len(students)))
@@ -44,7 +44,7 @@ func (s *StudentServiceImpl) GetStudent(id string, ctx context.Context) (model.S
 	var student model.Student
 	result := s.DB.WithContext(ctx).First(&student, "id = ?", id)
 	if result.Error != nil {
-		logging.Logger.Info("[get-service]: Failed to get student", zap.String("id", id))
+		logging.Logger.Error("[get-service]: Failed to get student", zap.String("id", id))
 		return model.Student{}, errors.New("Student not found")
 	}
 	logging.Logger.Info("[get-service]: Successfully fetched student", zap.String("id", id))
@@ -58,7 +58,7 @@ func (s *StudentServiceImpl) CreateStudent(st model.Student, ctx context.Context
 	st.ID = uuid.New().String()
 	result := s.DB.WithContext(ctx).Create(&st)
 	if result.Error != nil {
-		logging.Logger.Info("[create-service]: Failed to create student")
+		logging.Logger.Error("[create-service]: Failed to create student")
 		return model.Student{}, result.Error
 	}
 	logging.Logger.Info("[create-service]: Successfully created student", zap.String("id", st.ID))
@@ -71,7 +71,7 @@ func (s *StudentServiceImpl) UpdateStudent(id string, updated model.Student, ctx
 
 	var student model.Student
 	if err := s.DB.WithContext(ctx).First(&student, "id = ?", id).Error; err != nil {
-		logging.Logger.Info("[update-service]: Failed to update student", zap.String("id", id))
+		logging.Logger.Error("[update-service]: Failed to update student", zap.String("id", id))
 		return model.Student{}, errors.New("Student not found")
 	}
 	student.Name = updated.Name
@@ -88,7 +88,7 @@ func (s *StudentServiceImpl) DeleteStudent(id string, ctx context.Context) error
 
 	result := s.DB.WithContext(ctx).Delete(&model.Student{}, "id = ?", id)
 	if result.RowsAffected == 0 {
-		logging.Logger.Info("[delete-service]: Failed to delete student", zap.String("id", id))
+		logging.Logger.Error("[delete-service]: Failed to delete student", zap.String("id", id))
 		return errors.New("Student not found")
 	}
 

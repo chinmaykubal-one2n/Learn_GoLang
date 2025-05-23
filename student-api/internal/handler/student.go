@@ -58,7 +58,7 @@ func (h *Handler) list(c *gin.Context) {
 
 	students, err := h.service.ListStudents(c.Request.Context())
 	if err != nil {
-		logging.Logger.Info("[list-handler]: Failed to list students")
+		logging.Logger.Error("[list-handler]: Failed to list students")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -81,7 +81,7 @@ func (h *Handler) get(c *gin.Context) {
 
 	s, err := h.service.GetStudent(c.Param("id"), c.Request.Context())
 	if err != nil {
-		logging.Logger.Info("[get-handler]: Failed to get student", zap.String("student_id", c.Param("id")))
+		logging.Logger.Error("[get-handler]: Failed to get student", zap.String("student_id", c.Param("id")))
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
@@ -111,7 +111,7 @@ func (h *Handler) create(c *gin.Context) {
 	}
 	student, err := h.service.CreateStudent(input, c.Request.Context())
 	if err != nil {
-		logging.Logger.Info("[create-handler]: Failed to create student", zap.String("student_id", c.Param("id")))
+		logging.Logger.Error("[create-handler]: Failed to create student", zap.String("student_id", c.Param("id")))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -141,7 +141,7 @@ func (h *Handler) update(c *gin.Context) {
 	}
 	student, err := h.service.UpdateStudent(c.Param("id"), input, c.Request.Context())
 	if err != nil {
-		logging.Logger.Info("[update-handler]: Failed to update student", zap.String("student_id", c.Param("id")))
+		logging.Logger.Error("[update-handler]: Failed to update student", zap.String("student_id", c.Param("id")))
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
@@ -164,7 +164,7 @@ func (h *Handler) deleteStudent(c *gin.Context) {
 
 	err := h.service.DeleteStudent(c.Param("id"), c.Request.Context())
 	if err != nil {
-		logging.Logger.Info("[delete-handler]: Failed to delete student", zap.String("student_id", c.Param("id")))
+		logging.Logger.Error("[delete-handler]: Failed to delete student", zap.String("student_id", c.Param("id")))
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
