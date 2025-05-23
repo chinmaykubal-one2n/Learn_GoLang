@@ -92,4 +92,5 @@ go get -u github.com/swaggo/gin-swagger
 go get -u github.com/swaggo/files
 swag init
 
-# opentelemetry setup with signoze :- https://signoz.io/blog/opentelemetry-gin/
+# opentelemetry setup (tracing+metrics) with signoze :- https://signoz.io/blog/opentelemetry-gin/
+# logs https://signoz.io/docs/logs-management/send-logs/zap-to-signoz/#requirements-1

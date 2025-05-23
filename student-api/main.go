@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"student-api/internal/db"
 	"student-api/internal/handler"
+	logging "student-api/internal/logger"
 	"student-api/internal/middleware"
 	"student-api/internal/otel"
 	"student-api/internal/service"
@@ -36,6 +37,14 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, using environment variables")
 	}
+	// Initialize the logger
+	err := logging.InitLogger(ctx, os.Getenv("SERVICE_NAME"), os.Getenv("OTLP_ENDPOINT"))
+	if err != nil {
+		panic("failed to initialize logger: " + err.Error())
+	}
+	defer logging.Logger.Sync()
+	logging.Logger.Info("Starting Student API")
+
 	// Initialize the OpenTelemetry tracer
 	cleanup := otel.InitTracer()
 	defer cleanup(context.Background())
