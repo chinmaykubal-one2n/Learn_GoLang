@@ -39,8 +39,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 // @Success 200 {object} map[string]string
 // @Router /healthz [get]
 func (h *Handler) HealthCheck(c *gin.Context) {
-	logging.Logger.Info("Received health check request", zap.String("timestamp", time.Now().Format(time.RFC3339)))
-
+	logging.Logger.Info("[health-check-handler]: Received health check request", zap.String("timestamp", time.Now().Format(time.RFC3339)))
 	c.JSON(http.StatusOK, gin.H{
 		"status":    "ok",
 		"timestamp": time.Now().Format(time.RFC3339),
@@ -55,14 +54,15 @@ func (h *Handler) HealthCheck(c *gin.Context) {
 // @Failure 500 {object} map[string]string
 // @Router /api/students [get]
 func (h *Handler) list(c *gin.Context) {
-	logging.Logger.Info("Received request to list students", zap.String("timestamp", time.Now().Format(time.RFC3339)))
+	logging.Logger.Info("[list-handler]: Received request to list students", zap.String("timestamp", time.Now().Format(time.RFC3339)))
 
 	students, err := h.service.ListStudents(c.Request.Context())
 	if err != nil {
+		logging.Logger.Info("[list-handler]: Failed to list students")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	logging.Logger.Info("Successfully listed students", zap.Int("count", len(students)))
+	logging.Logger.Info("[list-handler]: Successfully listed students", zap.Int("count", len(students)))
 
 	c.JSON(http.StatusOK, students)
 }
@@ -77,14 +77,15 @@ func (h *Handler) list(c *gin.Context) {
 // @Failure 404 {object} map[string]string
 // @Router /api/students/{id} [get]
 func (h *Handler) get(c *gin.Context) {
-	logging.Logger.Info("Received request to get a student", zap.String("timestamp", time.Now().Format(time.RFC3339)))
+	logging.Logger.Info("[get-handler]: Received request to get a student", zap.String("timestamp", time.Now().Format(time.RFC3339)))
 
 	s, err := h.service.GetStudent(c.Param("id"), c.Request.Context())
 	if err != nil {
+		logging.Logger.Info("[get-handler]: Failed to get student", zap.String("student_id", c.Param("id")))
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
-	logging.Logger.Info("Successfully retrived student", zap.String("student_id", s.ID))
+	logging.Logger.Info("[get-handler]: Successfully retrived student", zap.String("student_id", s.ID))
 
 	c.JSON(http.StatusOK, s)
 }
@@ -101,7 +102,7 @@ func (h *Handler) get(c *gin.Context) {
 // @Failure 500 {object} map[string]string
 // @Router /api/students [post]
 func (h *Handler) create(c *gin.Context) {
-	logging.Logger.Info("Received request to create a student", zap.String("timestamp", time.Now().Format(time.RFC3339)))
+	logging.Logger.Info("[create-handler]: Received request to create a student", zap.String("timestamp", time.Now().Format(time.RFC3339)))
 
 	var input model.Student
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -110,10 +111,11 @@ func (h *Handler) create(c *gin.Context) {
 	}
 	student, err := h.service.CreateStudent(input, c.Request.Context())
 	if err != nil {
+		logging.Logger.Info("[create-handler]: Failed to create student", zap.String("student_id", c.Param("id")))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	logging.Logger.Info("Successfully created student", zap.String("student_id", student.ID))
+	logging.Logger.Info("[create-handler]: Successfully created student", zap.String("student_id", student.ID))
 
 	c.JSON(http.StatusCreated, student)
 }
@@ -131,7 +133,7 @@ func (h *Handler) create(c *gin.Context) {
 // @Failure 404 {object} map[string]string
 // @Router /api/students/{id} [put]
 func (h *Handler) update(c *gin.Context) {
-	logging.Logger.Info("Received request to update a student", zap.String("timestamp", time.Now().Format(time.RFC3339)))
+	logging.Logger.Info("[update-handler]: Received request to update a student", zap.String("timestamp", time.Now().Format(time.RFC3339)))
 	var input model.Student
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -139,10 +141,11 @@ func (h *Handler) update(c *gin.Context) {
 	}
 	student, err := h.service.UpdateStudent(c.Param("id"), input, c.Request.Context())
 	if err != nil {
+		logging.Logger.Info("[update-handler]: Failed to update student", zap.String("student_id", c.Param("id")))
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
-	logging.Logger.Info("Successfully updated student", zap.String("student_id", student.ID))
+	logging.Logger.Info("[update-handler]: Successfully updated student", zap.String("student_id", student.ID))
 
 	c.JSON(http.StatusOK, student)
 }
@@ -157,14 +160,15 @@ func (h *Handler) update(c *gin.Context) {
 // @Failure 404 {object} map[string]string
 // @Router /api/students/{id} [delete]
 func (h *Handler) deleteStudent(c *gin.Context) {
-	logging.Logger.Info("Received request to delete a student", zap.String("timestamp", time.Now().Format(time.RFC3339)))
+	logging.Logger.Info("[delete-handler]:  Received request to delete a student", zap.String("timestamp", time.Now().Format(time.RFC3339)))
 
 	err := h.service.DeleteStudent(c.Param("id"), c.Request.Context())
 	if err != nil {
+		logging.Logger.Info("[delete-handler]: Failed to delete student", zap.String("student_id", c.Param("id")))
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
-	logging.Logger.Info("Successfully deleted student", zap.String("student_id", c.Param("id")))
+	logging.Logger.Info("[update-handler]: Successfully deleted student", zap.String("student_id", c.Param("id")))
 
 	c.Status(http.StatusNoContent)
 }
