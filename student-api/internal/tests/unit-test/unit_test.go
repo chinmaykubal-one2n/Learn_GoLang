@@ -9,6 +9,7 @@ import (
 	"strings"
 	"student-api/internal/handler"
 	"student-api/internal/model"
+	"student-api/internal/pkg/tests"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -46,6 +47,7 @@ func (m *MockStudentService) DeleteStudent(id string, ctx context.Context) error
 }
 
 func TestGetStudent(t *testing.T) {
+	tests.SetupLoggerForTests()
 	mockService := new(MockStudentService)
 	h := handler.NewHandler(mockService)
 	router := gin.Default()
@@ -81,6 +83,7 @@ func TestGetStudent(t *testing.T) {
 }
 
 func TestCreateStudent(t *testing.T) {
+	tests.SetupLoggerForTests()
 	mockService := new(MockStudentService)
 	h := handler.NewHandler(mockService)
 	router := gin.Default()
@@ -129,6 +132,7 @@ func TestCreateStudent(t *testing.T) {
 }
 
 func TestUpdateStudent(t *testing.T) {
+	tests.SetupLoggerForTests()
 	mockService := new(MockStudentService)
 	h := handler.NewHandler(mockService)
 	router := gin.Default()
@@ -185,6 +189,7 @@ func TestUpdateStudent(t *testing.T) {
 }
 
 func TestDeleteStudent(t *testing.T) {
+	tests.SetupLoggerForTests()
 	mockService := new(MockStudentService)
 	h := handler.NewHandler(mockService)
 	router := gin.Default()
@@ -221,6 +226,7 @@ func TestDeleteStudent(t *testing.T) {
 }
 
 func TestListStudents(t *testing.T) {
+	tests.SetupLoggerForTests()
 	t.Run("success", func(t *testing.T) {
 		mockService := new(MockStudentService)
 		h := handler.NewHandler(mockService)
