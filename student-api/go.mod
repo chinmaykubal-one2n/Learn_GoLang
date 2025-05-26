@@ -13,6 +13,8 @@ require (
 	gorm.io/gorm v1.26.1
 )
 
+require go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v1.36.0 // indirect
+
 require (
 	ariga.io/atlas-go-sdk v0.7.1 // indirect
 	ariga.io/atlas-provider-gorm v0.5.1 // indirect
@@ -90,6 +92,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.36.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.36.0 // indirect
 	go.opentelemetry.io/otel/sdk/log v0.12.2 // indirect
+	go.opentelemetry.io/otel/sdk/metric v1.36.0
 	go.opentelemetry.io/otel/trace v1.36.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect

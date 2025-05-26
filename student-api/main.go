@@ -9,6 +9,7 @@ import (
 	"student-api/internal/db"
 	"student-api/internal/handler"
 	logging "student-api/internal/logger"
+	"student-api/internal/metrics"
 	"student-api/internal/middleware"
 	"student-api/internal/otel"
 	"student-api/internal/service"
@@ -37,6 +38,7 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, using environment variables")
 	}
+
 	// Initialize the logger
 	err := logging.InitLogger(ctx, os.Getenv("SERVICE_NAME"), os.Getenv("OTLP_ENDPOINT"))
 	if err != nil {
@@ -48,6 +50,13 @@ func main() {
 	// Initialize the OpenTelemetry tracer
 	cleanup := otel.InitTracer()
 	defer cleanup(context.Background())
+
+	// Initialize metrics
+	metricsCleanup, err := metrics.InitializeMetrics(ctx)
+	if err != nil {
+		log.Fatalf("Failed to initialize metrics: %v", err)
+	}
+	defer metricsCleanup(context.Background())
 
 	dbInstance := db.Connect()
 
@@ -69,7 +78,10 @@ func main() {
 
 	routerEngine := gin.Default()
 
-	// OpenTelemetry otelgin middleware
+	// Metrics middleware (should be first to capture all requests)
+	routerEngine.Use(metrics.MetricsMiddleware())
+
+	//OpenTelemetry otelgin middleware
 	routerEngine.Use(otelgin.Middleware(os.Getenv("SERVICE_NAME")))
 
 	routerEngine.GET("/healthz", h.HealthCheck)
