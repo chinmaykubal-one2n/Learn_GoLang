@@ -9,13 +9,26 @@ import (
 	"strings"
 	"student-api/internal/handler"
 	"student-api/internal/model"
-	"student-api/internal/pkg/tests"
 	"testing"
+
+	logging "student-api/internal/logger"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
+
+// setupLoggerForTests initializes a zap logger for use in tests
+func setupLoggerForTests() {
+	config := zap.NewProductionConfig()
+	config.EncoderConfig.TimeKey = "timestamp"
+	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	config.Level = zap.NewAtomicLevelAt(zap.ErrorLevel) // Only log errors during tests
+	logger, _ := config.Build()
+	logging.Logger = logger
+}
 
 type MockStudentService struct {
 	mock.Mock
@@ -47,7 +60,7 @@ func (m *MockStudentService) DeleteStudent(id string, ctx context.Context) error
 }
 
 func TestGetStudent(t *testing.T) {
-	tests.SetupLoggerForTests()
+	setupLoggerForTests()
 	mockService := new(MockStudentService)
 	h := handler.NewHandler(mockService)
 	router := gin.Default()
@@ -83,7 +96,7 @@ func TestGetStudent(t *testing.T) {
 }
 
 func TestCreateStudent(t *testing.T) {
-	tests.SetupLoggerForTests()
+	setupLoggerForTests()
 	mockService := new(MockStudentService)
 	h := handler.NewHandler(mockService)
 	router := gin.Default()
@@ -132,7 +145,7 @@ func TestCreateStudent(t *testing.T) {
 }
 
 func TestUpdateStudent(t *testing.T) {
-	tests.SetupLoggerForTests()
+	setupLoggerForTests()
 	mockService := new(MockStudentService)
 	h := handler.NewHandler(mockService)
 	router := gin.Default()
@@ -189,7 +202,7 @@ func TestUpdateStudent(t *testing.T) {
 }
 
 func TestDeleteStudent(t *testing.T) {
-	tests.SetupLoggerForTests()
+	setupLoggerForTests()
 	mockService := new(MockStudentService)
 	h := handler.NewHandler(mockService)
 	router := gin.Default()
@@ -226,7 +239,7 @@ func TestDeleteStudent(t *testing.T) {
 }
 
 func TestListStudents(t *testing.T) {
-	tests.SetupLoggerForTests()
+	setupLoggerForTests()
 	t.Run("success", func(t *testing.T) {
 		mockService := new(MockStudentService)
 		h := handler.NewHandler(mockService)
