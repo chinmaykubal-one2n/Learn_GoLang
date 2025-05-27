@@ -84,7 +84,7 @@ func initMetrics() error {
 	APIRequestCount, err = meter.Int64Counter(
 		"http_requests_total",
 		metric.WithDescription("Total number of HTTP requests"),
-		metric.WithUnit("{request}"),
+		metric.WithUnit("1"),
 	)
 	if err != nil {
 		return err
