@@ -32,22 +32,22 @@ func InitLogger(ctx context.Context, serviceName string, otlpEndpoint string) er
 		sdklog.WithProcessor(processor),
 	)
 
-	// Step 4: Create a zap logger
+	// Step 4: Graceful shutdown
+	defer func() {
+		if err := provider.Shutdown(ctx); err != nil {
+			fmt.Fprintln(os.Stderr, "Error shutting down logger provider:", err)
+		}
+	}()
+
+	// Step 5: Create a zap logger
 	zapLogger := zap.NewExample()
 	otelLogger := otelzap.New(zapLogger,
 		otelzap.WithLoggerProvider(provider),
 		otelzap.WithMinLevel(zap.DebugLevel),
 	)
 
-	// Step 5: Assign the logger
+	// Step 6: Assign the logger
 	Logger = otelLogger
-
-	// Step 6: Graceful shutdown
-	defer func() {
-		if err := provider.Shutdown(ctx); err != nil {
-			fmt.Fprintln(os.Stderr, "Error shutting down logger provider:", err)
-		}
-	}()
 
 	return nil
 }
