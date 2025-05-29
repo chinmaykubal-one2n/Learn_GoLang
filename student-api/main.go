@@ -40,23 +40,24 @@ func main() {
 	}
 
 	// Initialize the logger
-	err := logging.InitLogger(ctx, os.Getenv("SERVICE_NAME"), os.Getenv("OTLP_ENDPOINT"))
+	shutdownLogger, err := logging.InitLogger(ctx, os.Getenv("SERVICE_NAME"), os.Getenv("OTLP_ENDPOINT"))
 	if err != nil {
 		panic("failed to initialize logger: " + err.Error())
 	}
-	defer logging.Logger.Sync()
+	defer shutdownLogger(ctx)   //  Clean shutdown of logger provider
+	defer logging.Logger.Sync() //  Flush zap buffer
 	logging.Logger.Info("Starting Student API")
 
 	// Initialize the OpenTelemetry tracer
-	cleanup := otel.InitTracer(context.Background())
-	defer cleanup(context.Background())
+	cleanup := otel.InitTracer(ctx)
+	defer cleanup(ctx)
 
 	// Initialize metrics
 	metricsCleanup, err := metrics.InitializeMetrics(ctx)
 	if err != nil {
 		log.Fatalf("Failed to initialize metrics: %v", err)
 	}
-	defer metricsCleanup(context.Background())
+	defer metricsCleanup(ctx)
 
 	dbInstance := db.Connect()
 
