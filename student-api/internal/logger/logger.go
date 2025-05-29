@@ -18,7 +18,7 @@ func InitLogger(ctx context.Context, serviceName string, otlpEndpoint string) er
 	// Step 1: Create an OTLP HTTP exporter
 	exporter, err := otlploghttp.New(ctx,
 		otlploghttp.WithEndpoint(otlpEndpoint),
-		otlploghttp.WithInsecure(), // Use WithTLSConfig if needed
+		otlploghttp.WithInsecure(),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create OTLP log exporter: %w", err)
@@ -32,7 +32,7 @@ func InitLogger(ctx context.Context, serviceName string, otlpEndpoint string) er
 		sdklog.WithProcessor(processor),
 	)
 
-	// Step 4: Create a zap logger and wrap it with otelzap, passing the logger provider
+	// Step 4: Create a zap logger
 	zapLogger := zap.NewExample()
 	otelLogger := otelzap.New(zapLogger,
 		otelzap.WithLoggerProvider(provider),
