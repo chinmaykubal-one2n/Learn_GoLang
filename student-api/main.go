@@ -48,7 +48,7 @@ func main() {
 	logging.Logger.Info("Starting Student API")
 
 	// Initialize the OpenTelemetry tracer
-	cleanup := otel.InitTracer()
+	cleanup := otel.InitTracer(context.Background())
 	defer cleanup(context.Background())
 
 	// Initialize metrics

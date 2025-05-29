@@ -45,7 +45,7 @@ func InitLogger(ctx context.Context, serviceName string, otlpEndpoint string) er
 	// Step 6: Graceful shutdown
 	go func() {
 		<-ctx.Done()
-		if err := provider.Shutdown(context.Background()); err != nil {
+		if err := provider.Shutdown(ctx); err != nil {
 			fmt.Fprintln(os.Stderr, "Error shutting down logger provider:", err)
 		}
 	}()
