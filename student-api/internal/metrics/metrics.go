@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"strings"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -34,10 +35,10 @@ func InitializeMetrics(ctx context.Context) (func(context.Context) error, error)
 		otlpmetricgrpc.WithEndpoint(collectorURL),
 	}
 
-	if len(insecure) > 0 {
-		opts = append(opts, otlpmetricgrpc.WithInsecure())
-	} else {
+	if strings.ToLower(insecure) == "false" || insecure == "0" || strings.ToLower(insecure) == "f" {
 		opts = append(opts, otlpmetricgrpc.WithTLSCredentials(credentials.NewClientTLSFromCert(nil, "")))
+	} else {
+		opts = append(opts, otlpmetricgrpc.WithInsecure())
 	}
 
 	exporter, err := otlpmetricgrpc.New(ctx, opts...)
