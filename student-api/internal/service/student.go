@@ -30,7 +30,7 @@ func (s *StudentServiceImpl) ListStudents(ctx context.Context) ([]model.Student,
 	_, span := otel.Tracer("student-service").Start(ctx, "list-students")
 	defer span.End()
 
-	logging.Logger.Info("[list-service]: Fetching students from database")
+	logging.Logger.Ctx(ctx).Info("[list-service]: Fetching students from database")
 
 	var students []model.Student
 	result := s.DB.WithContext(ctx).Find(&students)
@@ -43,7 +43,7 @@ func (s *StudentServiceImpl) ListStudents(ctx context.Context) ([]model.Student,
 
 	span.SetAttributes(attribute.Int("student_count", len(students)))
 	span.SetStatus(codes.Ok, "successfully fetched students")
-	logging.Logger.Info("[list-service]: Successfully fetched students", zap.Int("count", len(students)))
+	logging.Logger.Ctx(ctx).Info("[list-service]: Successfully fetched students", zap.Int("count", len(students)))
 
 	return students, nil
 }
@@ -53,7 +53,7 @@ func (s *StudentServiceImpl) GetStudent(id string, ctx context.Context) (model.S
 	defer span.End()
 	span.SetAttributes(attribute.String("student_id", id))
 
-	logging.Logger.Info("[get-service]: Fetching student from database")
+	logging.Logger.Ctx(ctx).Info("[get-service]: Fetching student from database")
 
 	var student model.Student
 	result := s.DB.WithContext(ctx).First(&student, "id = ?", id)
@@ -65,7 +65,7 @@ func (s *StudentServiceImpl) GetStudent(id string, ctx context.Context) (model.S
 	}
 
 	span.SetStatus(codes.Ok, "successfully fetched student")
-	logging.Logger.Info("[get-service]: Successfully fetched student", zap.String("id", id))
+	logging.Logger.Ctx(ctx).Info("[get-service]: Successfully fetched student", zap.String("id", id))
 
 	return student, nil
 }
@@ -74,7 +74,7 @@ func (s *StudentServiceImpl) CreateStudent(st model.Student, ctx context.Context
 	_, span := otel.Tracer("student-service").Start(ctx, "create-student")
 	defer span.End()
 
-	logging.Logger.Info("[create-service]: Creating student in database")
+	logging.Logger.Ctx(ctx).Info("[create-service]: Creating student in database")
 
 	st.ID = uuid.New().String()
 	span.SetAttributes(
@@ -92,7 +92,7 @@ func (s *StudentServiceImpl) CreateStudent(st model.Student, ctx context.Context
 	}
 
 	span.SetStatus(codes.Ok, "successfully created student")
-	logging.Logger.Info("[create-service]: Successfully created student", zap.String("id", st.ID))
+	logging.Logger.Ctx(ctx).Info("[create-service]: Successfully created student", zap.String("id", st.ID))
 
 	return st, nil
 }
@@ -102,7 +102,7 @@ func (s *StudentServiceImpl) UpdateStudent(id string, updated model.Student, ctx
 	defer span.End()
 	span.SetAttributes(attribute.String("student_id", id))
 
-	logging.Logger.Info("[update-service]: Updating student in database")
+	logging.Logger.Ctx(ctx).Info("[update-service]: Updating student in database")
 
 	var student model.Student
 	if err := s.DB.WithContext(ctx).First(&student, "id = ?", id).Error; err != nil {
@@ -129,7 +129,7 @@ func (s *StudentServiceImpl) UpdateStudent(id string, updated model.Student, ctx
 	}
 
 	span.SetStatus(codes.Ok, "successfully updated student")
-	logging.Logger.Info("[update-service]: Successfully updated student", zap.String("id", id))
+	logging.Logger.Ctx(ctx).Info("[update-service]: Successfully updated student", zap.String("id", id))
 	return student, nil
 }
 
@@ -138,7 +138,7 @@ func (s *StudentServiceImpl) DeleteStudent(id string, ctx context.Context) error
 	defer span.End()
 	span.SetAttributes(attribute.String("student_id", id))
 
-	logging.Logger.Info("[delete-service]: Deleting student from database")
+	logging.Logger.Ctx(ctx).Info("[delete-service]: Deleting student from database")
 
 	result := s.DB.WithContext(ctx).Delete(&model.Student{}, "id = ?", id)
 	if result.RowsAffected == 0 {
@@ -149,6 +149,6 @@ func (s *StudentServiceImpl) DeleteStudent(id string, ctx context.Context) error
 
 	span.SetStatus(codes.Ok, "successfully deleted student")
 	span.SetAttributes(attribute.Int64("rows_affected", result.RowsAffected))
-	logging.Logger.Info("[delete-service]: Successfully deleted student", zap.String("id", id))
+	logging.Logger.Ctx(ctx).Info("[delete-service]: Successfully deleted student", zap.String("id", id))
 	return nil
 }

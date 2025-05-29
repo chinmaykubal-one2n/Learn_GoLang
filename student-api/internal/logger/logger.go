@@ -5,39 +5,44 @@ import (
 	"fmt"
 	"os"
 
-	"go.opentelemetry.io/contrib/bridges/otelzap"
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	// "go.opentelemetry.io/contrib/bridges/otelzap"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
 	"go.uber.org/zap"
 )
 
-var Logger *zap.Logger
+var Logger *otelzap.Logger
 
 func InitLogger(ctx context.Context, serviceName string, otlpEndpoint string) error {
-	// Create an OTLP HTTP exporter to send logs to SigNoz
+	// Step 1: Create an OTLP HTTP exporter
 	exporter, err := otlploghttp.New(ctx,
 		otlploghttp.WithEndpoint(otlpEndpoint),
-		otlploghttp.WithInsecure(), // Disable TLS if SigNoz is running locally
+		otlploghttp.WithInsecure(), // Use WithTLSConfig if needed
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create OTLP log exporter: %w", err)
 	}
 
-	// Create a processor for batching log records
+	// Step 2: Create a batching processor
 	processor := sdklog.NewBatchProcessor(exporter)
 
-	// Create a LoggerProvider
+	// Step 3: Create the logger provider
 	provider := sdklog.NewLoggerProvider(
 		sdklog.WithProcessor(processor),
 	)
 
-	// Set up zap with the otelzap core bridge
-	core := otelzap.NewCore(serviceName, otelzap.WithLoggerProvider(provider))
-	zapLogger := zap.New(core)
+	// Step 4: Create a zap logger and wrap it with otelzap, passing the logger provider
+	zapLogger := zap.NewExample()
+	otelLogger := otelzap.New(zapLogger,
+		otelzap.WithLoggerProvider(provider),
+		otelzap.WithMinLevel(zap.DebugLevel),
+	)
 
-	Logger = zapLogger
+	// Step 5: Assign the logger
+	Logger = otelLogger
 
-	// Clean up the provider on application shutdown
+	// Step 6: Graceful shutdown
 	go func() {
 		<-ctx.Done()
 		if err := provider.Shutdown(context.Background()); err != nil {
