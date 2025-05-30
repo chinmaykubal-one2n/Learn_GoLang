@@ -1,4 +1,4 @@
-.PHONY: run unit-test integration-test migrate-diff migrate-apply migrate-down migrate-status swag
+.PHONY: run unit-test integration-test migrate-diff migrate-apply migrate-down migrate-status swag seed-data
 
 include .env
 
@@ -22,3 +22,6 @@ migrate-status:
 
 swag:
 	@swag init -d ./,./internal/handler/,./internal/model/
+
+seed-data:
+	@go run ./internal/cmd/seeder/main.go
