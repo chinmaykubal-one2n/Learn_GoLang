@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	totalStudents = flag.Int("total", 1000000, "Total number of students to insert")
+	totalStudents = flag.Int("total", 500000, "Total number of students to insert")
 	batchSize     = flag.Int("batch", 1000, "Number of students to insert per batch")
 )
 
