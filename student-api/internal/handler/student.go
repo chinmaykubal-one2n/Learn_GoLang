@@ -3,6 +3,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 	logging "student-api/internal/logger"
 	"student-api/internal/model"
 	"student-api/internal/service"
@@ -63,9 +64,18 @@ func (h *Handler) list(c *gin.Context) {
 	ctx, span := otel.Tracer("student-handler").Start(c.Request.Context(), "list-students")
 	defer span.End()
 
-	logging.Logger.Info("[list-handler]: Received request to list students")
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+	pageSize, err := strconv.Atoi(c.DefaultQuery("page_size", "100"))
+	if err != nil || pageSize < 1 || pageSize > 500 {
+		pageSize = 100
+	}
 
-	students, err := h.service.ListStudents(ctx)
+	logging.Logger.Info("[list-handler]: Received request to list students", zap.Int("page", page), zap.Int("page_size", pageSize))
+
+	students, err := h.service.ListStudents(ctx, page, pageSize)
 	if err != nil {
 		span.SetStatus(codes.Error, "failed to list students")
 		span.SetAttributes(attribute.String("error", err.Error()))
@@ -78,7 +88,11 @@ func (h *Handler) list(c *gin.Context) {
 	span.SetStatus(codes.Ok, "successfully listed students")
 	logging.Logger.Info("[list-handler]: Successfully listed students", zap.Int("count", len(students)))
 
-	c.JSON(http.StatusOK, students)
+	c.JSON(http.StatusOK, gin.H{
+		"students":  students,
+		"page":      page,
+		"page_size": pageSize,
+	})
 }
 
 // get godoc

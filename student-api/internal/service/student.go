@@ -15,7 +15,7 @@ import (
 )
 
 type StudentService interface {
-	ListStudents(ctx context.Context) ([]model.Student, error)
+	ListStudents(ctx context.Context, page, pageSize int) ([]model.Student, error)
 	GetStudent(id string, ctx context.Context) (model.Student, error)
 	CreateStudent(s model.Student, ctx context.Context) (model.Student, error)
 	UpdateStudent(id string, updated model.Student, ctx context.Context) (model.Student, error)
@@ -26,14 +26,16 @@ type StudentServiceImpl struct {
 	DB *gorm.DB
 }
 
-func (s *StudentServiceImpl) ListStudents(ctx context.Context) ([]model.Student, error) {
+func (s *StudentServiceImpl) ListStudents(ctx context.Context, page, pageSize int) ([]model.Student, error) {
 	_, span := otel.Tracer("student-service").Start(ctx, "list-students")
 	defer span.End()
 
-	logging.Logger.Ctx(ctx).Info("[list-service]: Fetching students from database")
+	logging.Logger.Ctx(ctx).Info("[list-service]: Fetching students from database", zap.Int("page", page), zap.Int("page_size", pageSize))
 
 	var students []model.Student
-	result := s.DB.WithContext(ctx).Find(&students)
+	offset := (page - 1) * pageSize
+
+	result := s.DB.WithContext(ctx).Limit(pageSize).Offset(offset).Find(&students)
 	if result.Error != nil {
 		span.SetStatus(codes.Error, "failed to fetch students")
 		span.SetAttributes(attribute.String("error", result.Error.Error()))
@@ -41,7 +43,11 @@ func (s *StudentServiceImpl) ListStudents(ctx context.Context) ([]model.Student,
 		return []model.Student{}, errors.New("Student not found")
 	}
 
-	span.SetAttributes(attribute.Int("student_count", len(students)))
+	span.SetAttributes(
+		attribute.Int("student_count", len(students)),
+		attribute.Int("page", page),
+		attribute.Int("page_size", pageSize),
+	)
 	span.SetStatus(codes.Ok, "successfully fetched students")
 	logging.Logger.Ctx(ctx).Info("[list-service]: Successfully fetched students", zap.Int("count", len(students)))
 
