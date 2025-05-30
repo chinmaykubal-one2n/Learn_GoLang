@@ -16,18 +16,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 // setupLoggerForTests initializes a zap logger for use in tests
 func setupLoggerForTests() {
-	config := zap.NewProductionConfig()
-	config.EncoderConfig.TimeKey = "timestamp"
-	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	config.Level = zap.NewAtomicLevelAt(zap.ErrorLevel) // Only log errors during tests
-	logger, _ := config.Build()
-	logging.Logger = logger
+	logging.Logger = otelzap.New(zap.NewExample())
 }
 
 type MockStudentService struct {
