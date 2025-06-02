@@ -96,3 +96,13 @@ swag init
 
 # opentelemetry setup (tracing+metrics) with signoze :- https://signoz.io/blog/opentelemetry-gin/
 # logs https://signoz.io/docs/logs-management/send-logs/zap-to-signoz/#requirements-1
+
+
+# Docker stuff
+docker build -t student-api-go:multistage .
+
+docker run --rm -p 8090:8090 \
+  --env-file .env \
+  --add-host=host.docker.internal:host-gateway \
+  --network signoz-net \
+  student-api-go:multistage
