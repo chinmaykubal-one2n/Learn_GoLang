@@ -106,4 +106,5 @@ docker run -d -p 8090:8090 \
   --env-file .env.docker \
   --add-host=host.docker.internal:host-gateway \
   --network signoz-net \
+  --name student-api-go \
   student-api-go:multistage

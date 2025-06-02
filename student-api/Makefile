@@ -1,4 +1,4 @@
-.PHONY: run unit-test integration-test migrate-diff migrate-apply migrate-down migrate-status swag seed-data
+.PHONY: run unit-test integration-test migrate-diff migrate-apply migrate-down migrate-status swag seed-data docker-build docker-run docker-remove
 
 include .env
 
@@ -25,3 +25,18 @@ swag:
 
 seed-data:
 	@go run ./internal/cmd/seeder/main.go
+
+docker-build:
+	@docker build -t student-api-go:multistage .
+
+docker-run:
+	@docker run -d -p 8090:8090 \
+		--env-file .env.docker \
+		--add-host=host.docker.internal:host-gateway \
+		--network signoz-net \
+		--name student-api-go \
+		student-api-go:multistage
+
+docker-remove:
+	@docker rm -f student-api-go 
+	@docker rmi -f student-api-go:multistage
