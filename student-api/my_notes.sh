@@ -101,8 +101,9 @@ swag init
 # Docker stuff
 docker build -t student-api-go:multistage .
 
-docker run --rm -p 8090:8090 \
-  --env-file .env \
+
+docker run -d -p 8090:8090 \
+  --env-file .env.docker \
   --add-host=host.docker.internal:host-gateway \
   --network signoz-net \
   student-api-go:multistage
