@@ -22,15 +22,16 @@ import (
 
 // setupLoggerForTests initializes a zap logger for use in tests
 func setupLoggerForTests() {
-	logging.Logger = otelzap.New(zap.NewExample())
+	zapLogger := zap.NewExample()
+	logging.Logger = otelzap.New(zapLogger)
 }
 
 type MockStudentService struct {
 	mock.Mock
 }
 
-func (m *MockStudentService) ListStudents(ctx context.Context) ([]model.Student, error) {
-	args := m.Called(ctx)
+func (m *MockStudentService) ListStudents(ctx context.Context, page, pageSize int) ([]model.Student, error) {
+	args := m.Called(ctx, page, pageSize)
 	return args.Get(0).([]model.Student), args.Error(1)
 }
 
@@ -235,6 +236,7 @@ func TestDeleteStudent(t *testing.T) {
 
 func TestListStudents(t *testing.T) {
 	setupLoggerForTests()
+
 	t.Run("success", func(t *testing.T) {
 		mockService := new(MockStudentService)
 		h := handler.NewHandler(mockService)
@@ -246,14 +248,14 @@ func TestListStudents(t *testing.T) {
 			{ID: "2", Name: "Bob", Age: 22, Email: "bob@example.com"},
 		}
 
-		mockService.On("ListStudents", mock.Anything).Return(students, nil)
+		mockService.On("ListStudents", mock.Anything, 1, 100).Return(students, nil)
 
 		req, _ := http.NewRequest("GET", "/students", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
-		mockService.AssertCalled(t, "ListStudents", mock.Anything)
+		mockService.AssertCalled(t, "ListStudents", mock.Anything, 1, 100)
 	})
 
 	t.Run("internal server error", func(t *testing.T) {
@@ -262,14 +264,14 @@ func TestListStudents(t *testing.T) {
 		router := gin.Default()
 		h.RegisterRoutes(router.Group("/"))
 
-		mockService.On("ListStudents", mock.Anything).Return([]model.Student{}, errors.New("Student not found"))
+		mockService.On("ListStudents", mock.Anything, 1, 100).Return([]model.Student{}, errors.New("Student not found"))
 
 		req, _ := http.NewRequest("GET", "/students", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
-		mockService.AssertCalled(t, "ListStudents", mock.Anything)
+		mockService.AssertCalled(t, "ListStudents", mock.Anything, 1, 100)
 
 		var respBody map[string]string
 		err := json.Unmarshal(w.Body.Bytes(), &respBody)
