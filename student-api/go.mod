@@ -25,6 +25,7 @@ require (
 	ariga.io/atlas-go-sdk v0.7.1 // indirect
 	ariga.io/atlas-provider-gorm v0.5.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/PuerkitoBio/purell v1.2.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect

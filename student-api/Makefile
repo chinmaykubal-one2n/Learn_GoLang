@@ -1,12 +1,15 @@
-.PHONY: run unit-test integration-test migrate-diff migrate-apply migrate-down migrate-status swag seed-data docker-build docker-run docker-remove
+.PHONY: run handler-unit-test service-unit-test integration-test migrate-diff migrate-apply migrate-down migrate-status swag seed-data docker-build docker-run docker-remove
 
 include .env
 
 run:
 	@go run main.go
 
-unit-test:
+handler-unit-test:
 	@go test ./internal/tests/unit-test/student_handler_test.go
+
+service-unit-test:
+	@go test ./internal/tests/unit-test/student_service_test.go
 
 integration-test:
 	@go test ./internal/tests/integration-test/integration_test.go
