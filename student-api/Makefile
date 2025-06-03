@@ -6,7 +6,7 @@ run:
 	@go run main.go
 
 unit-test:
-	@go test ./internal/tests/unit-test/unit_test.go
+	@go test ./internal/tests/unit-test/student_handler_test.go
 
 integration-test:
 	@go test ./internal/tests/integration-test/integration_test.go
