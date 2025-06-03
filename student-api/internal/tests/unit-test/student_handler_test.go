@@ -1,4 +1,4 @@
-package handler_test
+package unit_test
 
 import (
 	"context"
@@ -20,8 +20,8 @@ import (
 	"go.uber.org/zap"
 )
 
-// setupLoggerForTests initializes a zap logger for use in tests
-func setupLoggerForTests() {
+// setupLoggerForHandlerTests initializes a zap logger for use in tests
+func setupLoggerForHandlerTests() {
 	zapLogger := zap.NewExample()
 	logging.Logger = otelzap.New(zapLogger)
 }
@@ -56,7 +56,7 @@ func (m *MockStudentService) DeleteStudent(id string, ctx context.Context) error
 }
 
 func TestGetStudent(t *testing.T) {
-	setupLoggerForTests()
+	setupLoggerForHandlerTests()
 	mockService := new(MockStudentService)
 	h := handler.NewHandler(mockService)
 	router := gin.Default()
@@ -92,7 +92,7 @@ func TestGetStudent(t *testing.T) {
 }
 
 func TestCreateStudent(t *testing.T) {
-	setupLoggerForTests()
+	setupLoggerForHandlerTests()
 	mockService := new(MockStudentService)
 	h := handler.NewHandler(mockService)
 	router := gin.Default()
@@ -141,7 +141,7 @@ func TestCreateStudent(t *testing.T) {
 }
 
 func TestUpdateStudent(t *testing.T) {
-	setupLoggerForTests()
+	setupLoggerForHandlerTests()
 	mockService := new(MockStudentService)
 	h := handler.NewHandler(mockService)
 	router := gin.Default()
@@ -198,7 +198,7 @@ func TestUpdateStudent(t *testing.T) {
 }
 
 func TestDeleteStudent(t *testing.T) {
-	setupLoggerForTests()
+	setupLoggerForHandlerTests()
 	mockService := new(MockStudentService)
 	h := handler.NewHandler(mockService)
 	router := gin.Default()
@@ -235,7 +235,7 @@ func TestDeleteStudent(t *testing.T) {
 }
 
 func TestListStudents(t *testing.T) {
-	setupLoggerForTests()
+	setupLoggerForHandlerTests()
 
 	t.Run("success", func(t *testing.T) {
 		mockService := new(MockStudentService)
