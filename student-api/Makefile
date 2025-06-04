@@ -1,4 +1,4 @@
-.PHONY: run handler-unit-test service-unit-test integration-test migrate-diff migrate-apply migrate-down migrate-status swag seed-data docker-build docker-run docker-remove
+.PHONY: run handler-unit-test service-unit-test coverage integration-test migrate-diff migrate-apply migrate-down migrate-status swag seed-data docker-build docker-run docker-remove
 
 include .env
 
@@ -6,10 +6,14 @@ run:
 	@go run main.go
 
 handler-unit-test:
-	@go test ./internal/tests/unit-test/student_handler_test.go
+	@go test ./internal/handler/student_handler_test.go
 
 service-unit-test:
-	@go test ./internal/tests/unit-test/student_service_test.go
+	@go test ./internal/service/student_service_test.go
+
+coverage:
+	@go test ./... -coverprofile=coverage.out
+	@go tool cover -func=coverage.out
 
 integration-test:
 	@go test ./internal/tests/integration-test/integration_test.go
