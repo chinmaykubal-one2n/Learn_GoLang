@@ -3,7 +3,9 @@ package unit_test
 import (
 	"context"
 	"database/sql"
+	"errors"
 	logging "student-api/internal/logger"
+	"student-api/internal/model"
 	"student-api/internal/service"
 	"testing"
 
@@ -68,7 +70,7 @@ func TestListStudentsService(t *testing.T) {
 
 	t.Run("returns error when db fails", func(t *testing.T) {
 		mock.ExpectQuery(`SELECT \* FROM "students"`).
-			WillReturnError(sql.ErrConnDone)
+			WillReturnError(errors.New("student not found"))
 
 		ctx := context.Background()
 		students, err := svc.ListStudents(ctx, 1, 2)
@@ -103,13 +105,146 @@ func TestDeleteStudentService(t *testing.T) {
 	})
 
 	t.Run("returns error when student not found", func(t *testing.T) {
+		mock.ExpectBegin()
 		mock.ExpectExec(`DELETE FROM "students" WHERE id = \$1`).
 			WithArgs("123").
-			WillReturnResult(sqlmock.NewResult(0, 0))
+			WillReturnResult(sqlmock.NewResult(0, 0)).
+			WillReturnError(errors.New("student not found"))
+		mock.ExpectRollback()
 
 		ctx := context.Background()
 		err := svc.DeleteStudent("123", ctx)
 
 		assert.Error(t, err)
+	})
+}
+
+func TestCreateStudentService(t *testing.T) {
+	setupLoggerForServiceTests()
+
+	db, mock, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	svc := &service.StudentServiceImpl{DB: db}
+
+	t.Run("creates student successfully", func(t *testing.T) {
+		mock.ExpectBegin()
+		mock.ExpectExec(`INSERT INTO "students"`).
+			WithArgs(sqlmock.AnyArg(), "Luffy", 19, "luffy@onepiece.com").
+			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectCommit()
+
+		ctx := context.Background()
+		student, err := svc.CreateStudent(model.Student{Name: "Luffy", Age: 19, Email: "luffy@onepiece.com"}, ctx)
+
+		assert.NoError(t, err)
+		assert.Equal(t, "Luffy", student.Name)
+		assert.Equal(t, 19, student.Age)
+		assert.Equal(t, "luffy@onepiece.com", student.Email)
+		assert.NotEmpty(t, student.ID)
+	})
+
+	t.Run("returns error when creation fails", func(t *testing.T) {
+		mock.ExpectBegin()
+		mock.ExpectExec(`INSERT INTO "students"`).
+			WillReturnError(sql.ErrConnDone).
+			WillReturnResult(sqlmock.NewResult(0, 0))
+		mock.ExpectRollback()
+
+		ctx := context.Background()
+		student, err := svc.CreateStudent(model.Student{Name: "Luffy", Age: 19, Email: "luffy@onepiece.com"}, ctx)
+
+		assert.Error(t, err)
+		assert.Empty(t, student)
+	})
+}
+
+func TestGetStudentService(t *testing.T) {
+	setupLoggerForServiceTests()
+
+	db, mock, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	svc := &service.StudentServiceImpl{DB: db}
+
+	t.Run("returns student on success", func(t *testing.T) {
+		studentID := "123"
+		rows := sqlmock.NewRows([]string{"id", "name", "age", "email"}).
+			AddRow(studentID, "Luffy", 19, "luffy@onepiece.com")
+
+		mock.ExpectQuery(`(?i)^SELECT \* FROM "students" WHERE id = \$1 ORDER BY "students"\."id" LIMIT \$2$`).
+			WithArgs(studentID, 1).
+			WillReturnRows(rows)
+
+		ctx := context.Background()
+		student, err := svc.GetStudent(studentID, ctx)
+
+		assert.NoError(t, err)
+		assert.Equal(t, studentID, student.ID)
+		assert.Equal(t, "Luffy", student.Name)
+		assert.Equal(t, 19, student.Age)
+		assert.Equal(t, "luffy@onepiece.com", student.Email)
+	})
+
+	t.Run("returns error when student not found", func(t *testing.T) {
+		studentID := "999"
+
+		mock.ExpectQuery(`(?i)^SELECT \* FROM "students" WHERE id = \$1 ORDER BY "students"\."id" LIMIT \$2$`).
+			WithArgs(studentID, 1).
+			WillReturnError(gorm.ErrRecordNotFound)
+
+		ctx := context.Background()
+		student, err := svc.GetStudent(studentID, ctx)
+
+		assert.Error(t, err)
+		assert.EqualError(t, err, "Student not found")
+		assert.Empty(t, student.ID)
+	})
+}
+
+func TestUpdateStudentService(t *testing.T) {
+	setupLoggerForServiceTests()
+
+	db, mock, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	svc := &service.StudentServiceImpl{DB: db}
+
+	t.Run("updates student successfully", func(t *testing.T) {
+		studentID := "123"
+
+		rows := sqlmock.NewRows([]string{"id", "name", "age", "email"}).
+			AddRow(studentID, "Luffy", 19, "luffy@onepiece.com")
+
+		mock.ExpectQuery(`(?i)^SELECT \* FROM "students" WHERE id = \$1 ORDER BY "students"\."id" LIMIT \$2$`).
+			WithArgs(studentID, 1).
+			WillReturnRows(rows)
+
+		mock.ExpectBegin()
+		mock.ExpectExec(`UPDATE "students" SET`).
+			WithArgs("Zoro", 21, "zoro@onepiece.com", studentID).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectCommit()
+
+		ctx := context.Background()
+		updatedStudent, err := svc.UpdateStudent(studentID, model.Student{Name: "Zoro", Age: 21, Email: "zoro@onepiece.com"}, ctx)
+
+		assert.NoError(t, err)
+		assert.Equal(t, "Zoro", updatedStudent.Name)
+		assert.Equal(t, 21, updatedStudent.Age)
+		assert.Equal(t, "zoro@onepiece.com", updatedStudent.ID)
+	})
+
+	t.Run("returns error when student not found", func(t *testing.T) {
+		studentID := "123"
+		mock.ExpectQuery(`(?i)^SELECT \* FROM "students" WHERE id = \$1 ORDER BY "students"\."id" LIMIT \$2$`).
+			WithArgs(studentID).
+			WillReturnError(sql.ErrNoRows)
+
+		ctx := context.Background()
+		updatedStudent, err := svc.UpdateStudent(studentID, model.Student{Name: "Zoro", Age: 21, Email: "zoro@onepiece.com"}, ctx)
+
+		assert.Error(t, err)
+		assert.Empty(t, updatedStudent)
 	})
 }
