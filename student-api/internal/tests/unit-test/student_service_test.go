@@ -60,7 +60,7 @@ func TestListStudentsService(t *testing.T) {
 		ctx := context.Background()
 		students, err := svc.ListStudents(ctx, 1, 2)
 
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		assert.Len(t, students, 2)
 		assert.Equal(t, "Luffy", students[0].Name)
 		assert.Equal(t, "Zoro", students[1].Name)
@@ -75,5 +75,41 @@ func TestListStudentsService(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.Empty(t, students)
+	})
+}
+
+func TestDeleteStudentService(t *testing.T) {
+	setupLoggerForServiceTests()
+
+	db, mock, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	svc := &service.StudentServiceImpl{DB: db}
+
+	t.Run("deletes student successfully", func(t *testing.T) {
+
+		mock.ExpectBegin()
+		mock.ExpectExec(`DELETE FROM "students" WHERE id = \$1`).
+			WithArgs("123").
+			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectCommit()
+
+		ctx := context.Background()
+
+		// Perform the delete operation
+		err := svc.DeleteStudent("123", ctx)
+
+		assert.NoError(t, err)
+	})
+
+	t.Run("returns error when student not found", func(t *testing.T) {
+		mock.ExpectExec(`DELETE FROM "students" WHERE id = \$1`).
+			WithArgs("123").
+			WillReturnResult(sqlmock.NewResult(0, 0))
+
+		ctx := context.Background()
+		err := svc.DeleteStudent("123", ctx)
+
+		assert.Error(t, err)
 	})
 }
