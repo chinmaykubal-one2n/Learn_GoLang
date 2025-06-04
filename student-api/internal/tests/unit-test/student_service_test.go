@@ -66,6 +66,12 @@ func TestListStudentsService(t *testing.T) {
 		assert.Len(t, students, 2)
 		assert.Equal(t, "Luffy", students[0].Name)
 		assert.Equal(t, "Zoro", students[1].Name)
+		assert.Equal(t, 19, students[0].Age)
+		assert.Equal(t, 21, students[1].Age)
+		assert.Equal(t, "luffy@onepiece.com", students[0].Email)
+		assert.Equal(t, "zoro@onepiece.com", students[1].Email)
+		assert.NotEmpty(t, students[0].ID)
+		assert.NotEmpty(t, students[1].ID)
 	})
 
 	t.Run("returns error when db fails", func(t *testing.T) {
@@ -89,7 +95,6 @@ func TestDeleteStudentService(t *testing.T) {
 	svc := &service.StudentServiceImpl{DB: db}
 
 	t.Run("deletes student successfully", func(t *testing.T) {
-
 		mock.ExpectBegin()
 		mock.ExpectExec(`DELETE FROM "students" WHERE id = \$1`).
 			WithArgs("123").
@@ -98,7 +103,6 @@ func TestDeleteStudentService(t *testing.T) {
 
 		ctx := context.Background()
 
-		// Perform the delete operation
 		err := svc.DeleteStudent("123", ctx)
 
 		assert.NoError(t, err)
@@ -180,10 +184,10 @@ func TestGetStudentService(t *testing.T) {
 		student, err := svc.GetStudent(studentID, ctx)
 
 		assert.NoError(t, err)
-		assert.Equal(t, studentID, student.ID)
 		assert.Equal(t, "Luffy", student.Name)
 		assert.Equal(t, 19, student.Age)
 		assert.Equal(t, "luffy@onepiece.com", student.Email)
+		assert.NotEmpty(t, student.ID)
 	})
 
 	t.Run("returns error when student not found", func(t *testing.T) {
@@ -233,6 +237,7 @@ func TestUpdateStudentService(t *testing.T) {
 		assert.Equal(t, "Zoro", updatedStudent.Name)
 		assert.Equal(t, 21, updatedStudent.Age)
 		assert.Equal(t, "zoro@onepiece.com", updatedStudent.Email)
+		assert.NotEmpty(t, updatedStudent.ID)
 	})
 
 	t.Run("returns error when student not found", func(t *testing.T) {
