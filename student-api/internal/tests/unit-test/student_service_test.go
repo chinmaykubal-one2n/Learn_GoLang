@@ -232,7 +232,7 @@ func TestUpdateStudentService(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "Zoro", updatedStudent.Name)
 		assert.Equal(t, 21, updatedStudent.Age)
-		assert.Equal(t, "zoro@onepiece.com", updatedStudent.ID)
+		assert.Equal(t, "zoro@onepiece.com", updatedStudent.Email)
 	})
 
 	t.Run("returns error when student not found", func(t *testing.T) {
