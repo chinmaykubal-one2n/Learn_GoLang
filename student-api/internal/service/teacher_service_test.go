@@ -101,3 +101,52 @@ func TestCreateTeacherService(t *testing.T) {
 		assert.Empty(t, teacher)
 	})
 }
+
+func TestGetTeacherService(t *testing.T) {
+	setupLoggerForTeacherServiceTests()
+	const (
+		id       = "111"
+		username = "Luffy"
+		password = "randomPassword"
+		email    = "luffy@onepiece.com"
+		role     = "admin"
+	)
+
+	db, mock, cleanup := setupTeacherTestDB(t)
+	defer cleanup()
+
+	svc := &service.TeacherServiceImpl{DB: db}
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+
+	t.Run("returns teacher on success", func(t *testing.T) {
+		rows := sqlmock.NewRows([]string{"id", "username", "password", "email", "role"}).
+			AddRow(id, username, string(hashedPassword), email, role)
+
+		mock.ExpectQuery(`SELECT \* FROM "teachers" WHERE username = \$1 ORDER BY "teachers"\."id" LIMIT \$2`).
+			WithArgs(username, 1).
+			WillReturnRows(rows)
+
+		ctx := context.Background()
+		teacher, err := svc.GetTeacher(username, ctx)
+		assert.NoError(t, err)
+		assert.Equal(t, username, teacher.Username)
+		assert.Equal(t, email, teacher.Email)
+		assert.Equal(t, role, teacher.Role)
+		assert.NotEmpty(t, teacher.ID)
+
+		bcryptErr := bcrypt.CompareHashAndPassword([]byte(teacher.Password), []byte(password))
+		assert.NoError(t, bcryptErr)
+	})
+
+	t.Run("returns error when teacher not found", func(t *testing.T) {
+		mock.ExpectQuery(`SELECT \* FROM "teachers" WHERE username = \$1 ORDER BY "teachers"\."id" LIMIT \$2`).
+			WithArgs(username, 1).
+			WillReturnError(gorm.ErrRecordNotFound)
+
+		ctx := context.Background()
+		teacher, err := svc.GetTeacher(username, ctx)
+
+		assert.Error(t, err)
+		assert.Empty(t, teacher)
+	})
+}
