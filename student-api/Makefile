@@ -12,7 +12,7 @@ service-unit-test:
 	@go test ./internal/service/student_service_test.go
 
 coverage:
-	@go test ./... -coverprofile=coverage.out
+	@go test ./internal/handler ./internal/service -coverprofile=coverage.out
 	@go tool cover -func=coverage.out
 
 integration-test:
