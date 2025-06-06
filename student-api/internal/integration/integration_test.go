@@ -8,6 +8,7 @@ import (
 
 	handler "student-api/internal/handler"
 	logging "student-api/internal/logger"
+	"student-api/internal/middleware"
 	"student-api/internal/model"
 	"student-api/internal/service"
 
@@ -79,18 +80,48 @@ func TestHealthCheckIntegration(t *testing.T) {
 
 func TestListStudentsIntegration(t *testing.T) {
 	setupLoggerForIntegrationTests()
-
 	db := SetupInMemoryDB()
+
 	studentService := &service.StudentServiceImpl{
 		DB: db,
 	}
+
+	teacherService := &service.TeacherServiceImpl{
+		DB: db,
+	}
+
+	err := db.Create(&model.Teacher{
+		ID:       "1",
+		Username: "admin-teacher",
+		Password: "randomPassword",
+		Email:    "test-email@gmail.com",
+		Role:     "admin",
+	}).Error
+	assert.NoError(t, err)
+
+	user := &middleware.User{
+		UserName: "admin-teacher",
+		Role:     "admin",
+	}
+
+	authMiddleware, err := middleware.AuthMiddleware(teacherService)
+	if err != nil {
+		log.Fatalf("JWT Error: %s", err.Error())
+	}
+
+	token, _, err := authMiddleware.TokenGenerator(user)
+	assert.NoError(t, err)
 
 	h := handler.NewHandler(studentService)
 
 	gin.SetMode(gin.TestMode)
 	router := gin.Default()
+
 	api := router.Group("/api")
-	h.RegisterRoutes(api)
+	api.Use(authMiddleware.MiddlewareFunc())
+	{
+		h.RegisterRoutes(api)
+	}
 
 	tests := []struct {
 		name           string
@@ -107,6 +138,7 @@ func TestListStudentsIntegration(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/api/students", nil)
+			req.Header.Set("Authorization", "Bearer "+token)
 			resp := httptest.NewRecorder()
 
 			router.ServeHTTP(resp, req)
