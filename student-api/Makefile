@@ -16,7 +16,7 @@ coverage:
 	@go tool cover -func=coverage.out
 
 integration-test:
-	@go test ./internal/tests/integration-test/integration_test.go
+	@go test ./internal/integration/integration_test.go
 
 migrate-diff:
 	@atlas migrate diff --env gorm  
