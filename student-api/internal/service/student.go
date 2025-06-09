@@ -67,7 +67,7 @@ func (s *StudentServiceImpl) GetStudent(id string, ctx context.Context) (model.S
 		span.SetStatus(codes.Error, "student not found")
 		span.SetAttributes(attribute.String("error", result.Error.Error()))
 		logging.Logger.Error("[get-service]: Failed to get student", zap.String("id", id))
-		return model.Student{}, errors.New("Student not found")
+		return model.Student{}, errors.New("student not found")
 	}
 
 	span.SetStatus(codes.Ok, "successfully fetched student")
