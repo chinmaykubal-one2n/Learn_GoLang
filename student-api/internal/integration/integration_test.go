@@ -322,7 +322,7 @@ func TestUpdateStudentIntegration(t *testing.T) {
 
 	generateToken := func(role string) string {
 		user := &middleware.User{
-			UserName: "Test User",
+			UserName: "Noel Johnson",
 			Role:     role,
 		}
 		token, _, err := authMiddleware.TokenGenerator(user)
@@ -409,6 +409,109 @@ func TestUpdateStudentIntegration(t *testing.T) {
 			assert.NoError(t, err)
 
 			assert.JSONEq(t, tc.expectedBody, string(cleaned))
+		})
+	}
+}
+
+func TestDeleteStudentIntegration(t *testing.T) {
+	setupLoggerForIntegrationTests()
+	db := SetupInMemoryDB()
+
+	studentService := &service.StudentServiceImpl{DB: db}
+	teacherService := &service.TeacherServiceImpl{DB: db}
+
+	authMiddleware, err := middleware.AuthMiddleware(teacherService)
+	assert.NoError(t, err)
+
+	h := handler.NewHandler(studentService)
+
+	gin.SetMode(gin.TestMode)
+	router := gin.Default()
+
+	api := router.Group("/api")
+	api.Use(authMiddleware.MiddlewareFunc())
+	{
+		h.RegisterRoutes(api)
+	}
+
+	generateToken := func(role string) string {
+		user := &middleware.User{
+			UserName: "Noel Johnson",
+			Role:     role,
+		}
+		token, _, err := authMiddleware.TokenGenerator(user)
+		assert.NoError(t, err)
+		return token
+	}
+
+	// Create a student to delete
+	initialStudent := model.Student{Name: "Delete Me", Email: "deleteme@example.com", Age: 25}
+	created, err := studentService.CreateStudent(initialStudent, context.Background())
+	assert.NoError(t, err)
+
+	tests := []struct {
+		name           string
+		id             string
+		token          string
+		expectedStatus int
+		expectedBody   string
+	}{
+		{
+			name:           "delete student with admin role",
+			id:             created.ID,
+			token:          generateToken("admin"),
+			expectedStatus: http.StatusNoContent,
+			expectedBody:   "",
+		},
+		{
+			name:           "delete student with missing token",
+			id:             created.ID,
+			token:          "",
+			expectedStatus: http.StatusUnauthorized,
+			expectedBody:   `{"error":"cookie token is empty"}`,
+		},
+		{
+			name:           "delete student with invalid token",
+			id:             created.ID,
+			token:          "invalid.token.here",
+			expectedStatus: http.StatusUnauthorized,
+			expectedBody:   `{"error":"invalid character '\\u008a' looking for beginning of value"}`,
+		},
+		{
+			name:           "delete student that does not exist",
+			id:             "non-existent-id",
+			token:          generateToken("admin"),
+			expectedStatus: http.StatusNotFound,
+			expectedBody:   `{"error":"Student not found"}`,
+		},
+		{
+			name:           "delete student with regular role",
+			id:             created.ID,
+			token:          generateToken("regular"),
+			expectedStatus: http.StatusForbidden,
+			expectedBody:   `{"error":"you don't have permission to access this resource"}`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			url := fmt.Sprintf("/api/students/%s", tc.id)
+			req := httptest.NewRequest(http.MethodDelete, url, nil)
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "Bearer "+tc.token)
+
+			resp := httptest.NewRecorder()
+			router.ServeHTTP(resp, req)
+
+			assert.Equal(t, tc.expectedStatus, resp.Code)
+
+			if tc.expectedStatus != http.StatusNoContent {
+				assert.JSONEq(t, tc.expectedBody, resp.Body.String())
+			}
+
+			if tc.expectedStatus == http.StatusNoContent {
+				assert.Equal(t, tc.expectedBody, resp.Body.String())
+			}
 		})
 	}
 }
