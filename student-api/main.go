@@ -69,11 +69,7 @@ func main() {
 		DB: dbInstance,
 	}
 
-	teacherHandler := &handler.TeacherHandler{
-		Service: &service.TeacherServiceImpl{
-			DB: dbInstance,
-		},
-	}
+	teacherHandler := &handler.TeacherHandler{Service: teacherService}
 
 	h := handler.NewHandler(studentService)
 
