@@ -623,3 +623,84 @@ func TestDeleteStudentIntegration(t *testing.T) {
 		})
 	}
 }
+
+func TestRegisterTeacherIntegration(t *testing.T) {
+	setupLoggerForIntegrationTests()
+	db := SetupInMemoryDB()
+
+	teacherService := &service.TeacherServiceImpl{DB: db}
+	teacherHandler := &handler.TeacherHandler{Service: teacherService}
+
+	gin.SetMode(gin.TestMode)
+	router := gin.Default()
+	router.POST("/register", teacherHandler.RegisterTeacher)
+
+	tests := []struct {
+		name           string
+		requestBody    string
+		expectedStatus int
+		expectedBody   string
+	}{
+		{
+			name: "valid teacher registration",
+			requestBody: `{
+				"username": "Teacher-Alice5",
+				"password": "SuperSecret123!",
+				"email": "tach-alice11@example.com",
+				"role": "regular"
+			}`,
+			expectedStatus: http.StatusCreated,
+			expectedBody: `{
+				"username": "Teacher-Alice5",
+				"email": "tach-alice11@example.com",
+				"role": "regular"
+			}`,
+		},
+		{
+			name: "missing username",
+			requestBody: `{
+				"password": "SuperSecret123!",
+				"email": "tach-alice11@example.com",
+				"role": "admin"
+			}`,
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   `{"error":"Key: 'Teacher.Username' Error:Field validation for 'Username' failed on the 'required' tag"}`,
+		},
+		{
+			name: "invalid json format",
+			requestBody: `{
+				"username": "test",
+				"password": "test"`,
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   `{"error":"unexpected EOF"}`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodPost, "/register", strings.NewReader(tc.requestBody))
+			req.Header.Set("Content-Type", "application/json")
+			resp := httptest.NewRecorder()
+
+			router.ServeHTTP(resp, req)
+
+			assert.Equal(t, tc.expectedStatus, resp.Code)
+
+			if tc.expectedStatus == http.StatusCreated {
+				var actualBody map[string]interface{}
+				err := json.Unmarshal(resp.Body.Bytes(), &actualBody)
+				assert.NoError(t, err)
+
+				delete(actualBody, "id")
+				delete(actualBody, "password")
+
+				cleaned, err := json.Marshal(actualBody)
+				assert.NoError(t, err)
+
+				assert.JSONEq(t, tc.expectedBody, string(cleaned))
+			} else {
+				assert.JSONEq(t, tc.expectedBody, resp.Body.String())
+			}
+		})
+	}
+}
