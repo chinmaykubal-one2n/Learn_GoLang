@@ -201,7 +201,7 @@ func TestGetStudentService(t *testing.T) {
 		student, err := svc.GetStudent(studentID, ctx)
 
 		assert.Error(t, err)
-		assert.EqualError(t, err, "Student not found")
+		assert.EqualError(t, err, "student not found")
 		assert.Empty(t, student.ID)
 	})
 }
