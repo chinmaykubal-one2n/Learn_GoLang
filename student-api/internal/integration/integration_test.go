@@ -130,13 +130,13 @@ func TestListStudentsIntegration(t *testing.T) {
 			expectedBody:   `{"students":[],"page":1,"page_size":100}`,
 		},
 		{
-			name:           "missing token - unauthorized",
+			name:           "missing token",
 			token:          "",
 			expectedStatus: http.StatusUnauthorized,
 			expectedBody:   `{"error":"cookie token is empty"}`,
 		},
 		{
-			name:           "invalid token - unauthorized",
+			name:           "invalid token",
 			token:          "invalid.token.here",
 			expectedStatus: http.StatusUnauthorized,
 			expectedBody:   `{"error":"invalid character '\\u008a' looking for beginning of value"}`, // just matching the error message for invalid token, from the terminal output
@@ -188,22 +188,22 @@ func TestCreateStudentIntegration(t *testing.T) {
 		return token
 	}
 
-	requestBody := `{
-		"name": "John Doe",
-		"email": "john.doe@example.com",
-		"age": 21
-	}`
-
 	tests := []struct {
 		name           string
 		token          string
 		expectedStatus int
+		requestBody    string
 		expectedBody   string
 	}{
 		{
 			name:           "create student with admin role",
 			token:          generateToken("admin"),
 			expectedStatus: http.StatusCreated,
+			requestBody: `{
+				"name": "John Doe",
+				"email": "john.doe@example.com",
+				"age": 21
+			}`,
 			expectedBody: `{
 				"name": "John Doe",
 				"email": "john.doe@example.com",
@@ -214,33 +214,86 @@ func TestCreateStudentIntegration(t *testing.T) {
 			name:           "create student with regular role",
 			token:          generateToken("regular"),
 			expectedStatus: http.StatusCreated,
+			requestBody: `{
+				"name": "John Doe",
+				"email": "john.doe@example.com",
+				"age": 21
+			}`,
 			expectedBody: `{
 				"name": "John Doe",
 				"email": "john.doe@example.com",
 				"age": 21
 			}`,
 		},
+		{
+			name:           "missing token",
+			token:          "",
+			expectedStatus: http.StatusUnauthorized,
+			requestBody: `{
+				"name": "John Doe",
+				"email": "john.doe@example.com",
+				"age": 21
+			}`,
+			expectedBody: `{"error":"cookie token is empty"}`,
+		},
+		{
+			name:           "invalid token",
+			token:          "invalid.token.here",
+			expectedStatus: http.StatusUnauthorized,
+			requestBody: `{
+				"name": "John Doe",
+				"email": "john.doe@example.com",
+				"age": 21
+			}`,
+			expectedBody: `{"error":"invalid character '\\u008a' looking for beginning of value"}`,
+		},
+		{
+			name:           "invalid age type",
+			token:          generateToken("regular"),
+			expectedStatus: http.StatusBadRequest,
+			requestBody: `{
+				"name": "Invalid User",
+				"email": "invalid@example.com",
+				"age": "twenty"
+			}`,
+			expectedBody: `{"error":"json: cannot unmarshal string into Go struct field Student.age of type int"}`,
+		},
+		{
+			name:           "missing required field",
+			token:          generateToken("regular"),
+			expectedStatus: http.StatusBadRequest,
+			requestBody: `{
+				"email": "missing.name@example.com",
+				"age": 18
+			}`,
+			expectedBody: `{"error":"Key: 'Student.Name' Error:Field validation for 'Name' failed on the 'required' tag"}`,
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodPost, "/api/students", strings.NewReader(requestBody))
-			req.Header.Set("Authorization", "Bearer "+tc.token)
+			req := httptest.NewRequest(http.MethodPost, "/api/students", strings.NewReader(tc.requestBody))
 			req.Header.Set("Content-Type", "application/json")
-			resp := httptest.NewRecorder()
+			req.Header.Set("Authorization", "Bearer "+tc.token)
 
+			resp := httptest.NewRecorder()
 			router.ServeHTTP(resp, req)
 
-			var actualBody map[string]interface{} // striping field ID from actual body for proper comparison
-			err := json.Unmarshal(resp.Body.Bytes(), &actualBody)
-			assert.NoError(t, err)
-
-			delete(actualBody, "id")
-			actualBodyCleaned, err := json.Marshal(actualBody)
-			assert.NoError(t, err)
-
 			assert.Equal(t, tc.expectedStatus, resp.Code)
-			assert.JSONEq(t, tc.expectedBody, string(actualBodyCleaned))
+
+			var actual map[string]interface{}
+			err := json.Unmarshal(resp.Body.Bytes(), &actual)
+			assert.NoError(t, err)
+
+			if tc.expectedStatus == http.StatusCreated {
+				delete(actual, "id")
+			}
+
+			actualCleaned, err := json.Marshal(actual)
+			assert.NoError(t, err)
+
+			assert.JSONEq(t, tc.expectedBody, string(actualCleaned))
 		})
 	}
+
 }
