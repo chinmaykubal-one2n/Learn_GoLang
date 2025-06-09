@@ -295,5 +295,4 @@ func TestCreateStudentIntegration(t *testing.T) {
 			assert.JSONEq(t, tc.expectedBody, string(actualCleaned))
 		})
 	}
-
 }
