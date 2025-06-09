@@ -1,7 +1,9 @@
 package integration
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -281,18 +283,132 @@ func TestCreateStudentIntegration(t *testing.T) {
 
 			assert.Equal(t, tc.expectedStatus, resp.Code)
 
-			var actual map[string]interface{}
-			err := json.Unmarshal(resp.Body.Bytes(), &actual)
+			var actualBody map[string]interface{}
+			err := json.Unmarshal(resp.Body.Bytes(), &actualBody)
 			assert.NoError(t, err)
 
 			if tc.expectedStatus == http.StatusCreated {
-				delete(actual, "id")
+				delete(actualBody, "id")
 			}
 
-			actualCleaned, err := json.Marshal(actual)
+			cleaned, err := json.Marshal(actualBody)
 			assert.NoError(t, err)
 
-			assert.JSONEq(t, tc.expectedBody, string(actualCleaned))
+			assert.JSONEq(t, tc.expectedBody, string(cleaned))
+		})
+	}
+}
+
+func TestUpdateStudentIntegration(t *testing.T) {
+	setupLoggerForIntegrationTests()
+	db := SetupInMemoryDB()
+
+	studentService := &service.StudentServiceImpl{DB: db}
+	teacherService := &service.TeacherServiceImpl{DB: db}
+
+	authMiddleware, err := middleware.AuthMiddleware(teacherService)
+	assert.NoError(t, err)
+
+	h := handler.NewHandler(studentService)
+
+	gin.SetMode(gin.TestMode)
+	router := gin.Default()
+
+	api := router.Group("/api")
+	api.Use(authMiddleware.MiddlewareFunc())
+	{
+		h.RegisterRoutes(api)
+	}
+
+	generateToken := func(role string) string {
+		user := &middleware.User{
+			UserName: "Test User",
+			Role:     role,
+		}
+		token, _, err := authMiddleware.TokenGenerator(user)
+		assert.NoError(t, err)
+		return token
+	}
+
+	// create a student to update
+	initialStudent := model.Student{Name: "Jane", Email: "jane@example.com", Age: 22}
+	created, err := studentService.CreateStudent(initialStudent, context.Background())
+	assert.NoError(t, err)
+
+	tests := []struct {
+		name           string
+		id             string
+		token          string
+		requestBody    string
+		expectedStatus int
+		expectedBody   string
+	}{
+		{
+			name:  "update student with valid data and admin role",
+			id:    created.ID,
+			token: generateToken("admin"),
+			requestBody: `{
+				"name": "Jane Updated",
+				"email": "updated@example.com",
+				"age": 23
+			}`,
+			expectedStatus: http.StatusOK,
+			expectedBody: `{
+				"name": "Jane Updated",
+				"email": "updated@example.com",
+				"age": 23
+			}`,
+		},
+		{
+			name:           "update student with missing token",
+			id:             created.ID,
+			token:          "",
+			requestBody:    `{"name":"X","email":"x@example.com","age":10}`,
+			expectedStatus: http.StatusUnauthorized,
+			expectedBody:   `{"error":"cookie token is empty"}`,
+		},
+		{
+			name:           "update student with invalid ID",
+			id:             "non-existent-id",
+			token:          generateToken("regular"),
+			requestBody:    `{"name":"New","email":"new@example.com","age":24}`,
+			expectedStatus: http.StatusNotFound,
+			expectedBody:   `{"error":"Student not found"}`,
+		},
+		{
+			name:           "update student with invalid body",
+			id:             created.ID,
+			token:          generateToken("regular"),
+			requestBody:    `{"name": 123, "email": "bad", "age": "invalid"}`,
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   `{"error":"json: cannot unmarshal number into Go struct field Student.name of type string"}`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			url := fmt.Sprintf("/api/students/%s", tc.id)
+			req := httptest.NewRequest(http.MethodPut, url, strings.NewReader(tc.requestBody))
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "Bearer "+tc.token)
+
+			resp := httptest.NewRecorder()
+			router.ServeHTTP(resp, req)
+
+			assert.Equal(t, tc.expectedStatus, resp.Code)
+
+			var actualBody map[string]interface{}
+			err := json.Unmarshal(resp.Body.Bytes(), &actualBody)
+			assert.NoError(t, err)
+
+			if tc.expectedStatus == http.StatusOK {
+				delete(actualBody, "id")
+			}
+
+			cleaned, err := json.Marshal(actualBody)
+			assert.NoError(t, err)
+
+			assert.JSONEq(t, tc.expectedBody, string(cleaned))
 		})
 	}
 }
