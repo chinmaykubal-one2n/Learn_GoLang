@@ -515,3 +515,111 @@ func TestDeleteStudentIntegration(t *testing.T) {
 		})
 	}
 }
+
+func TestGetStudentIntegration(t *testing.T) {
+	setupLoggerForIntegrationTests()
+	db := SetupInMemoryDB()
+
+	studentService := &service.StudentServiceImpl{DB: db}
+	teacherService := &service.TeacherServiceImpl{DB: db}
+
+	authMiddleware, authMiddlewareErr := middleware.AuthMiddleware(teacherService)
+	assert.NoError(t, authMiddlewareErr)
+
+	h := handler.NewHandler(studentService)
+
+	gin.SetMode(gin.TestMode)
+	router := gin.Default()
+
+	api := router.Group("/api")
+	api.Use(authMiddleware.MiddlewareFunc())
+	{
+		h.RegisterRoutes(api)
+	}
+
+	generateToken := func(role string) string {
+		user := &middleware.User{
+			UserName: "Noel Johnson",
+			Role:     role,
+		}
+		token, _, err := authMiddleware.TokenGenerator(user)
+		assert.NoError(t, err)
+		return token
+	}
+
+	// First create a student to retrieve
+	created, err := studentService.CreateStudent(model.Student{
+		Name:  "Jane Doe",
+		Email: "jane.doe@example.com",
+		Age:   22,
+	}, context.Background())
+	assert.NoError(t, err)
+
+	tests := []struct {
+		name           string
+		id             string
+		token          string
+		expectedStatus int
+		expectedBody   string
+	}{
+		{
+			name:           "get student with valid admin token",
+			id:             created.ID,
+			token:          generateToken("admin"),
+			expectedStatus: http.StatusOK,
+			expectedBody: `{
+				"name": "Jane Doe",
+				"email": "jane.doe@example.com",
+				"age": 22
+			}`,
+		},
+		{
+			name:           "student not found",
+			id:             "non-existent-id",
+			token:          generateToken("admin"),
+			expectedStatus: http.StatusNotFound,
+			expectedBody:   `{"error":"student not found"}`,
+		},
+		{
+			name:           "invalid token",
+			id:             created.ID,
+			token:          "invalid.token.here",
+			expectedStatus: http.StatusUnauthorized,
+			expectedBody:   `{"error":"invalid character '\\u008a' looking for beginning of value"}`,
+		},
+		{
+			name:           "missing token",
+			id:             created.ID,
+			token:          "",
+			expectedStatus: http.StatusUnauthorized,
+			expectedBody:   `{"error":"cookie token is empty"}`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			url := fmt.Sprintf("/api/students/%s", tc.id)
+			req := httptest.NewRequest(http.MethodGet, url, nil)
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "Bearer "+tc.token)
+
+			resp := httptest.NewRecorder()
+			router.ServeHTTP(resp, req)
+
+			assert.Equal(t, tc.expectedStatus, resp.Code)
+
+			var actualBody map[string]interface{}
+			err := json.Unmarshal(resp.Body.Bytes(), &actualBody)
+			assert.NoError(t, err)
+
+			if tc.expectedStatus == http.StatusOK {
+				delete(actualBody, "id")
+			}
+
+			cleaned, err := json.Marshal(actualBody)
+			assert.NoError(t, err)
+
+			assert.JSONEq(t, tc.expectedBody, string(cleaned))
+		})
+	}
+}
