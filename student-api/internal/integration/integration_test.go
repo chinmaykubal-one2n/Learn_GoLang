@@ -231,16 +231,16 @@ func TestCreateStudentIntegration(t *testing.T) {
 
 			router.ServeHTTP(resp, req)
 
-			var actual map[string]interface{} // striping field ID from actual body for proper comparison
-			err := json.Unmarshal(resp.Body.Bytes(), &actual)
+			var actualBody map[string]interface{} // striping field ID from actual body for proper comparison
+			err := json.Unmarshal(resp.Body.Bytes(), &actualBody)
 			assert.NoError(t, err)
 
-			delete(actual, "id")
-			actualCleaned, err := json.Marshal(actual)
+			delete(actualBody, "id")
+			actualBodyCleaned, err := json.Marshal(actualBody)
 			assert.NoError(t, err)
 
 			assert.Equal(t, tc.expectedStatus, resp.Code)
-			assert.JSONEq(t, tc.expectedBody, string(actualCleaned))
+			assert.JSONEq(t, tc.expectedBody, string(actualBodyCleaned))
 		})
 	}
 }
