@@ -1,9 +1,11 @@
 package integration
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	handler "student-api/internal/handler"
@@ -151,6 +153,94 @@ func TestListStudentsIntegration(t *testing.T) {
 
 			assert.Equal(t, tc.expectedStatus, resp.Code)
 			assert.JSONEq(t, tc.expectedBody, resp.Body.String())
+		})
+	}
+}
+
+func TestCreateStudentIntegration(t *testing.T) {
+	setupLoggerForIntegrationTests()
+	db := SetupInMemoryDB()
+
+	studentService := &service.StudentServiceImpl{DB: db}
+	teacherService := &service.TeacherServiceImpl{DB: db}
+
+	authMiddleware, authMiddlewareErr := middleware.AuthMiddleware(teacherService)
+	assert.NoError(t, authMiddlewareErr)
+
+	h := handler.NewHandler(studentService)
+
+	gin.SetMode(gin.TestMode)
+	router := gin.Default()
+
+	api := router.Group("/api")
+	api.Use(authMiddleware.MiddlewareFunc())
+	{
+		h.RegisterRoutes(api)
+	}
+
+	generateToken := func(role string) string {
+		user := &middleware.User{
+			UserName: "Noel Johnson",
+			Role:     role,
+		}
+		token, _, err := authMiddleware.TokenGenerator(user)
+		assert.NoError(t, err)
+		return token
+	}
+
+	requestBody := `{
+		"name": "John Doe",
+		"email": "john.doe@example.com",
+		"age": 21
+	}`
+
+	tests := []struct {
+		name           string
+		token          string
+		expectedStatus int
+		expectedBody   string
+	}{
+		{
+			name:           "create student with admin role",
+			token:          generateToken("admin"),
+			expectedStatus: http.StatusCreated,
+			expectedBody: `{
+				"name": "John Doe",
+				"email": "john.doe@example.com",
+				"age": 21
+			}`,
+		},
+		{
+			name:           "create student with regular role",
+			token:          generateToken("regular"),
+			expectedStatus: http.StatusCreated,
+			expectedBody: `{
+				"name": "John Doe",
+				"email": "john.doe@example.com",
+				"age": 21
+			}`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodPost, "/api/students", strings.NewReader(requestBody))
+			req.Header.Set("Authorization", "Bearer "+tc.token)
+			req.Header.Set("Content-Type", "application/json")
+			resp := httptest.NewRecorder()
+
+			router.ServeHTTP(resp, req)
+
+			var actual map[string]interface{} // striping field ID from actual body for proper comparison
+			err := json.Unmarshal(resp.Body.Bytes(), &actual)
+			assert.NoError(t, err)
+
+			delete(actual, "id")
+			actualCleaned, err := json.Marshal(actual)
+			assert.NoError(t, err)
+
+			assert.Equal(t, tc.expectedStatus, resp.Code)
+			assert.JSONEq(t, tc.expectedBody, string(actualCleaned))
 		})
 	}
 }
