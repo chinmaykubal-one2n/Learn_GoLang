@@ -82,35 +82,11 @@ func TestListStudentsIntegration(t *testing.T) {
 	setupLoggerForIntegrationTests()
 	db := SetupInMemoryDB()
 
-	studentService := &service.StudentServiceImpl{
-		DB: db,
-	}
+	studentService := &service.StudentServiceImpl{DB: db}
+	teacherService := &service.TeacherServiceImpl{DB: db}
 
-	teacherService := &service.TeacherServiceImpl{
-		DB: db,
-	}
-
-	err := db.Create(&model.Teacher{
-		ID:       "1",
-		Username: "admin-teacher",
-		Password: "randomPassword",
-		Email:    "test-email@gmail.com",
-		Role:     "admin",
-	}).Error
-	assert.NoError(t, err)
-
-	user := &middleware.User{
-		UserName: "admin-teacher",
-		Role:     "admin",
-	}
-
-	authMiddleware, err := middleware.AuthMiddleware(teacherService)
-	if err != nil {
-		log.Fatalf("JWT Error: %s", err.Error())
-	}
-
-	token, _, err := authMiddleware.TokenGenerator(user)
-	assert.NoError(t, err)
+	authMiddleware, authMiddlewareErr := middleware.AuthMiddleware(teacherService)
+	assert.NoError(t, authMiddlewareErr)
 
 	h := handler.NewHandler(studentService)
 
@@ -123,22 +99,52 @@ func TestListStudentsIntegration(t *testing.T) {
 		h.RegisterRoutes(api)
 	}
 
+	generateToken := func(role string) string {
+		user := &middleware.User{
+			UserName: "Noel Johnson",
+			Role:     role,
+		}
+		token, _, err := authMiddleware.TokenGenerator(user)
+		assert.NoError(t, err)
+		return token
+	}
+
 	tests := []struct {
 		name           string
+		token          string
 		expectedStatus int
 		expectedBody   string
 	}{
 		{
-			name:           "list students",
+			name:           "admin role - success",
+			token:          generateToken("admin"),
 			expectedStatus: http.StatusOK,
 			expectedBody:   `{"students":[],"page":1,"page_size":100}`,
+		},
+		{
+			name:           "regular role - success",
+			token:          generateToken("regular"),
+			expectedStatus: http.StatusOK,
+			expectedBody:   `{"students":[],"page":1,"page_size":100}`,
+		},
+		{
+			name:           "missing token - unauthorized",
+			token:          "",
+			expectedStatus: http.StatusUnauthorized,
+			expectedBody:   `{"error":"cookie token is empty"}`,
+		},
+		{
+			name:           "invalid token - unauthorized",
+			token:          "invalid.token.here",
+			expectedStatus: http.StatusUnauthorized,
+			expectedBody:   `{"error":"invalid character '\\u008a' looking for beginning of value"}`, // just matching the error message for invalid token, from the terminal output
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/api/students", nil)
-			req.Header.Set("Authorization", "Bearer "+token)
+			req.Header.Set("Authorization", "Bearer "+tc.token)
 			resp := httptest.NewRecorder()
 
 			router.ServeHTTP(resp, req)
