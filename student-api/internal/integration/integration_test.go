@@ -644,14 +644,14 @@ func TestRegisterTeacherIntegration(t *testing.T) {
 		{
 			name: "valid teacher registration",
 			requestBody: `{
-				"username": "Teacher-Alice5",
+				"username": "Georgiana Legros",
 				"password": "SuperSecret123!",
 				"email": "tach-alice11@example.com",
 				"role": "regular"
 			}`,
 			expectedStatus: http.StatusCreated,
 			expectedBody: `{
-				"username": "Teacher-Alice5",
+				"username": "Georgiana Legros",
 				"email": "tach-alice11@example.com",
 				"role": "regular"
 			}`,
@@ -700,6 +700,94 @@ func TestRegisterTeacherIntegration(t *testing.T) {
 				assert.JSONEq(t, tc.expectedBody, string(cleaned))
 			} else {
 				assert.JSONEq(t, tc.expectedBody, resp.Body.String())
+			}
+		})
+	}
+}
+
+func TestLoginIntegration(t *testing.T) {
+	setupLoggerForIntegrationTests()
+	db := SetupInMemoryDB()
+
+	teacherService := &service.TeacherServiceImpl{DB: db}
+	teacherHandler := &handler.TeacherHandler{Service: teacherService}
+
+	authMiddleware, err := middleware.AuthMiddleware(teacherService)
+	assert.NoError(t, err)
+
+	gin.SetMode(gin.TestMode)
+	router := gin.Default()
+
+	router.POST("/register", teacherHandler.RegisterTeacher)
+	router.POST("/login", authMiddleware.LoginHandler)
+
+	registerBody := `{
+		"username": "Georgiana Legros",
+		"email": "bradfordgrant@tremblay.name",
+		"password": "securePassword@123",
+		"role": "regular"
+	}`
+
+	req := httptest.NewRequest(http.MethodPost, "/register", strings.NewReader(registerBody))
+	req.Header.Set("Content-Type", "application/json")
+	resp := httptest.NewRecorder()
+	router.ServeHTTP(resp, req)
+	assert.Equal(t, http.StatusCreated, resp.Code)
+
+	tests := []struct {
+		name           string
+		loginBody      string
+		expectedStatus int
+		expectToken    bool
+	}{
+		{
+			name: "valid login",
+			loginBody: `{
+				"username": "Georgiana Legros",
+				"password": "securePassword@123"
+			}`,
+			expectedStatus: http.StatusOK,
+			expectToken:    true,
+		},
+		{
+			name: "invalid password",
+			loginBody: `{
+				"username": "Georgiana Legros",
+				"password": "wrongpass"
+			}`,
+			expectedStatus: http.StatusUnauthorized,
+			expectToken:    false,
+		},
+		{
+			name: "non-existent user",
+			loginBody: `{
+				"username": "nonexistent-user",
+				"password": "somepass"
+			}`,
+			expectedStatus: http.StatusUnauthorized,
+			expectToken:    false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			loginReq := httptest.NewRequest(http.MethodPost, "/login", strings.NewReader(tc.loginBody))
+			loginReq.Header.Set("Content-Type", "application/json")
+			loginResp := httptest.NewRecorder()
+
+			router.ServeHTTP(loginResp, loginReq)
+			assert.Equal(t, tc.expectedStatus, loginResp.Code)
+
+			if tc.expectToken {
+				var body map[string]interface{}
+				err := json.Unmarshal(loginResp.Body.Bytes(), &body)
+				assert.NoError(t, err)
+
+				token, ok := body["token"].(string)
+				assert.True(t, ok, "token field missing or not a string")
+				assert.NotEmpty(t, token, "token should not be empty")
+			} else {
+				assert.Contains(t, loginResp.Body.String(), "error")
 			}
 		})
 	}
